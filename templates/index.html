@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastAPI Todo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+        }
+
+        div {
+            margin-bottom: 10px;
+        }
+
+        input {
+            margin: 5px;
+            padding: 8px;
+            width: 250px;
+        }
+
+        button {
+            margin: 5px;
+            padding: 8px 15px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            margin: 5px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            width: 400px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+
+        li span {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            font-size: 16px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 5px;
+            align-items: center; 
+        }
+
+ 
+        li button {
+            border: none;
+            padding: 8px 12px; 
+            cursor: pointer;
+            border-radius: 3px;
+            height: 24px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        /* 삭제 버튼 */
+        .delete-btn {
+            background-color: green;
+            color: white;
+        }
+
+        /* 수정 버튼 */
+        .edit-btn {
+            background-color: blue;
+            color: white;
+        }
+
+        /* 완료 버튼 */
+        .complete-btn {
+            background-color: orange;
+            color: white;
+        }
+
+        /* 전체 삭제 버튼 */
+        .delete-all-btn {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+
+    </style>
+</head>
+<body>
+    <h2>To-Do List</h2>
+
+    <div>
+        <input type="text" id="task" placeholder="할 일 입력">
+        <input type="text" id="description" placeholder="설명 입력">
+        <button onclick="addTodo()">Add To-Do</button>
+    </div>
+
+    <ul id="todo-list"></ul>
+
+    <button class="delete-all-btn" onclick="deleteAllTodos()">Delete All</button>
+
+    <script>
+        const API_URL = "http://127.0.0.1:8000/todo";
+
+        // 할 일 목록 불러오기
+        async function loadTodos() {
+            const response = await fetch(API_URL);
+            const todos = await response.json();
+            const list = document.getElementById("todo-list");
+            list.innerHTML = "";
+
+            todos.forEach(todo => {
+                const item = document.createElement("li");
+
+                item.innerHTML = `
+                    <span id="text-${todo.id}">
+                        ${todo.completed ? "✅" : "❌"} ${todo.task}: ${todo.description}
+                    </span>
+                    <input type="text" id="edit-task-${todo.id}" value="${todo.task}" style="display:none;">
+                    <input type="text" id="edit-description-${todo.id}" value="${todo.description}" style="display:none;">
+                    <div class="button-group">
+                        <button class="complete-btn" onclick="toggleComplete(${todo.id})">
+                            ${todo.completed ? "Undo" : "Done"}
+                        </button>
+                        <button class="delete-btn" onclick="deleteTodo(${todo.id})">Delete</button>
+                        <button class="edit-btn" id="edit-btn-${todo.id}" onclick="toggleEdit(${todo.id})">Edit</button>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        // 할 일 추가
+        async function addTodo() {
+            const task = document.getElementById("task").value;
+            const description = document.getElementById("description").value;
+
+            if (!task) {
+                alert("할 일을 입력하세요!");
+                return;
+            }
+
+            await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ task, description, completed: false })
+            });
+
+            document.getElementById("task").value = "";
+            document.getElementById("description").value = "";
+            loadTodos();
+        }
+
+        async function toggleComplete(id) {
+            const response = await fetch(`${API_URL}/${id}`);
+            const todo = await response.json();
+
+            // 상태 반전
+            const updatedCompleted = !todo.completed;
+
+            // PUT 요청으로 상태 업데이트
+            await fetch(`${API_URL}/${id}/toggle`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ completed: updatedCompleted })
+            });
+
+            loadTodos();
+        }
+
+
+        // 개별 할 일 삭제
+        async function deleteTodo(id) {
+            await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+            loadTodos();
+        }
+
+        // 전체 삭제
+        async function deleteAllTodos() {
+            await fetch(API_URL, { method: "DELETE" });
+            loadTodos();
+        }
+
+        // 수정 버튼 클릭 시 입력 필드로 변경
+        function toggleEdit(id) {
+            const textSpan = document.getElementById(`text-${id}`);
+            const editTask = document.getElementById(`edit-task-${id}`);
+            const editDescription = document.getElementById(`edit-description-${id}`);
+            const editBtn = document.getElementById(`edit-btn-${id}`);
+
+            if (editTask.style.display === "none") {
+                textSpan.style.display = "none";
+                editTask.style.display = "inline";
+                editDescription.style.display = "inline";
+                editBtn.textContent = "Save";
+                editBtn.setAttribute("onclick", `saveEdit(${id})`);
+            } else {
+                textSpan.style.display = "inline";
+                editTask.style.display = "none";
+                editDescription.style.display = "none";
+                editBtn.textContent = "Edit";
+                editBtn.setAttribute("onclick", `toggleEdit(${id})`);
+            }
+        }
+
+        // 수정 내용 저장
+        async function saveEdit(id) {
+            const newTask = document.getElementById(`edit-task-${id}`).value;
+            const newDescription = document.getElementById(`edit-description-${id}`).value;
+
+            if (!newTask) {
+                alert("할 일을 입력하세요!");
+                return;
+            }
+
+            await fetch(`${API_URL}/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ task: newTask, description: newDescription })
+            });
+
+            loadTodos();
+        }
+
+        // 페이지 로딩 시 할 일 목록 불러오기
+        loadTodos();
+    </script>
+</body>
+</html>
