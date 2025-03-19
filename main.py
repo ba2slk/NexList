@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request, HTTPException, status
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import json
 
@@ -18,6 +19,8 @@ class TodoUpdate(BaseModel):
 
 
 app = FastAPI(debug=True)
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.add_middleware(
     CORSMiddleware,
