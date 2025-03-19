@@ -100,6 +100,8 @@ def read_todo(id: int):
 def delete_todo_list():
     todo_list.clear()
     dao.save_todo_list(todo_list)
+    global idx
+    idx = 0
     return
 
 
