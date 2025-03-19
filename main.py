@@ -5,9 +5,12 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import json
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 JSON_PATH = "./todo.json"
-
 
 class TodoItem(BaseModel):
     task: str
@@ -33,7 +36,8 @@ app.add_middleware(
 templates = Jinja2Templates(directory="templates")
 @app.get("/", response_class=HTMLResponse)
 def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    api_url = os.getenv("API_URL", "http://127.0.0.1:8000/todo")
+    return templates.TemplateResponse("index.html", {"request": request, "api_url": api_url})
 
 
 def find_todo_by_id(id: int) -> dict:

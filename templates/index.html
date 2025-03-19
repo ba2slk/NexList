@@ -100,6 +100,11 @@
         }
 
     </style>
+    
+    <script>
+        window.API_URL = "{{ api_url }}";
+    </script>
+    <script type="module" src="/static/js/main.js"></script>
 </head>
 <body>
     <h2>To-Do List</h2>
@@ -113,7 +118,5 @@
     <ul id="todo-list"></ul>
 
     <button class="delete-all-btn" onclick="deleteAllTodos()">Delete All</button>
-
-    <script type="module" src="../static/js/main.js"></script>
 </body>
 </html>
