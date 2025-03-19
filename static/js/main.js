@@ -1,5 +1,5 @@
 const API_URL = window.API_URL || "http://127.0.0.1:8000/todo";
-console.log(API_URL);
+
 // 할 일 목록 불러오기
 async function loadTodos() {
     const response = await fetch(API_URL);
