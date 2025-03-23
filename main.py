@@ -33,7 +33,10 @@ app.add_middleware(
     allow_headers=["*"], 
 )
 
-templates = Jinja2Templates(directory="templates")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
+
+templates = Jinja2Templates(directory=TEMPLATE_DIR)
 @app.get("/", response_class=HTMLResponse)
 def read_root(request: Request):
     api_url = os.getenv("API_URL", "http://127.0.0.1:8000/todo")
