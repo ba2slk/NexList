@@ -7,7 +7,6 @@ async function loadTodos() {
     const list = document.getElementById("todo-list");
     list.innerHTML = "";
 
-    // 투두 리스트 생성
     todos.forEach(todo => {
         const item = document.createElement("li");
 
@@ -18,11 +17,14 @@ async function loadTodos() {
             <input type="text" id="edit-task-${todo.id}" value="${todo.task}" style="display:none;">
             <input type="text" id="edit-description-${todo.id}" value="${todo.description}" style="display:none;">
             <div class="button-group">
+                <!-- 완료 토글 -->
                 <button class="complete-btn" onclick="toggleComplete(${todo.id})">
-                    ${todo.completed ? "Undo" : "Done"}
+                    ${todo.completed ? "👎" : "👍"}
                 </button>
-                <button class="delete-btn" onclick="deleteTodo(${todo.id})">Delete</button>
-                <button class="edit-btn" id="edit-btn-${todo.id}" onclick="toggleEdit(${todo.id})">Edit</button>
+                <!-- Edit/Save 버튼을 두 번째로 -->
+                <button class="edit-btn" id="edit-btn-${todo.id}" onclick="toggleEdit(${todo.id})">✏️</button>
+                <!-- Delete 버튼을 마지막으로 -->
+                <button class="delete-btn" onclick="deleteTodo(${todo.id})">➖</button>
             </div>
         `;
         list.appendChild(item);
@@ -30,13 +32,7 @@ async function loadTodos() {
 
     // "모두 삭제" 버튼 표시/숨김 로직
     const deleteAllBtn = document.querySelector(".delete-all-btn");
-    if (todos.length > 0) {
-        // 투두 항목이 하나 이상이면 버튼 표시
-        deleteAllBtn.style.display = "block";
-    } else {
-        // 투두가 없으면 버튼 숨기기
-        deleteAllBtn.style.display = "none";
-    }
+    deleteAllBtn.style.display = todos.length > 0 ? "block" : "none";
 }
 
 // 할 일 추가
@@ -55,8 +51,16 @@ async function addTodo() {
         body: JSON.stringify({ task, description, completed: false })
     });
 
+    // 입력 필드 초기화
     document.getElementById("task").value = "";
     document.getElementById("description").value = "";
+
+    // 설명 입력창 닫기 및 버튼 텍스트 리셋
+    const descContainer = document.getElementById("desc-container");
+    const toggleDescBtn = document.getElementById("toggle-desc");
+    descContainer.style.display = "none";
+    toggleDescBtn.textContent = "설명 추가";
+
     loadTodos();
 }
 
@@ -65,10 +69,8 @@ async function toggleComplete(id) {
     const response = await fetch(`${API_URL}/${id}`);
     const todo = await response.json();
 
-    // 상태 반전
     const updatedCompleted = !todo.completed;
 
-    // PUT 요청으로 상태 업데이트
     await fetch(`${API_URL}/${id}/toggle`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -131,7 +133,7 @@ async function saveEdit(id) {
     loadTodos();
 }
 
-// 전역에서 접근할 수 있도록 window 객체에 함수 등록
+// 전역에서 호출 가능하도록 함수 등록
 window.addTodo = addTodo;
 window.deleteTodo = deleteTodo;
 window.deleteAllTodos = deleteAllTodos;

@@ -5,17 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NexList To-Do</title>
   <style>
-    /* 전체 배경 */
+    /* 파스텔 색상 변수 */
+    :root {
+      --pastel-blue:   #A5D8FF; /* 설명 추가 버튼 */
+      --pastel-green:  #B2F2BB; /* 할 일 추가 버튼 */
+      --pastel-red:    #FFC9C9; /* 삭제 버튼, 모두 삭제 버튼 */
+      /* --pastel-orange: #FFD8A8;  사용하지 않으면 주석처리 가능 */
+      --pastel-purple: #D0BFFF; /* 수정(Edit), 완료(Done), 저장(Save) */
+    }
+
+    /* 전체 배경 및 기본 폰트 */
     body {
       margin: 0;
       padding: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f0f2f5;
+      background: #F3F8FB;
+      color: #555;
     }
 
     /* 상단 고정 네비게이션 바 */
     header {
-      position: fixed;  /* 스크롤해도 항상 화면 상단에 고정 */
+      position: fixed;
       top: 0;
       left: 0;
       width: 100%;
@@ -25,8 +35,6 @@
       display: flex;
       align-items: center;
     }
-
-    /* NexList 앵커 */
     .logo {
       font-size: 20px;
       font-weight: bold;
@@ -34,17 +42,15 @@
       text-decoration: none;
     }
 
-    /* 중앙 컨테이너 */
+    /* 메인 컨테이너 */
     .container {
       background: #fff;
-      margin: 100px auto 0 auto;  /* 네비게이션바 높이만큼 아래에서 시작 */
+      margin: 100px auto 0 auto;
       padding: 30px 40px;
       border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
       width: 600px;
     }
-
-    /* 제목 */
     .container h2 {
       text-align: center;
       color: #333;
@@ -57,21 +63,49 @@
       gap: 10px;
       margin-bottom: 20px;
     }
-    .form-group input {
+    .form-group input[type="text"] {
       flex: 1;
       padding: 10px;
       border: 1px solid #ddd;
       border-radius: 5px;
       font-size: 16px;
+      color: #555;
     }
-    .form-group button {
-      padding: 10px 20px;
+
+    /* 설명 추가 버튼 (토글) */
+    #toggle-desc {
+      background: var(--pastel-blue);
       border: none;
-      background: #28a745;
-      color: #fff;
       border-radius: 5px;
       font-size: 16px;
       cursor: pointer;
+      padding: 10px 20px;
+      color: #555;
+    }
+
+    /* 할 일 추가 버튼 */
+    #add-todo-btn {
+      background: var(--pastel-green);
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 10px 20px;
+      color: #555;
+    }
+
+    /* 설명 입력 필드 영역 (초기 숨김) */
+    #desc-container {
+      margin-bottom: 20px;
+      display: none;
+    }
+    #desc-container input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 16px;
+      color: #555;
     }
 
     /* To-Do 리스트 스타일 */
@@ -80,7 +114,7 @@
       padding: 0;
     }
     li {
-      background: #fafafa;
+      background: #fff;
       border: 1px solid #e0e0e0;
       border-radius: 5px;
       padding: 15px;
@@ -104,53 +138,82 @@
       border-radius: 5px;
       font-size: 14px;
       cursor: pointer;
-      color: #fff;
+      color: #555;
     }
     .complete-btn {
-      background: #ffc107;
+      background: var(--pastel-green);
     }
     .edit-btn {
-      background: #007bff;
+      background: var(--pastel-purple);
     }
     .delete-btn {
-      background: #dc3545;
+      background: var(--pastel-red);
     }
 
-    /* 모두 삭제 버튼 */
+    /* 모두 삭제 버튼 (기본 숨김) */
     .delete-all-btn {
       width: 100%;
       padding: 10px;
-      background: #dc3545;
+      background: var(--pastel-red);
       border: none;
       border-radius: 5px;
-      color: #fff;
+      color: #555;
       font-size: 16px;
       margin-top: 20px;
       cursor: pointer;
+      display: none;
     }
   </style>
   <script>
-    /* FastAPI 서버에서 주입해주는 API_URL 사용 */
+    // FastAPI 서버에서 주입해주는 API_URL
     window.API_URL = "{{ api_url }}";
   </script>
   <script type="module" src="/static/js/main.js"></script>
 </head>
 <body>
-  <!-- 상단 고정 영역 -->
+  <!-- 좌측 상단 고정 NexList 앵커 -->
   <header>
-    <a href="#" class="logo">NexList</a>
+    <a href="{{ url_for('read_root') }}" class="logo">NexList</a>
   </header>
-
-  <!-- 메인 컨테이너 -->
   <div class="container">
-    <h2>할 일 목록</h2>
+    <h2>오늘 할 일💡</h2>
+    <!-- 할 일 입력 폼 -->
     <div class="form-group">
       <input type="text" id="task" placeholder="할 일을 입력하세요" />
-      <input type="text" id="description" placeholder="설명을 입력하세요" />
-      <button onclick="addTodo()">추가</button>
+      <!-- 설명 추가 버튼 (토글) -->
+      <button id="toggle-desc" type="button">설명 추가</button>
+      <!-- 할 일 추가 버튼 -->
+      <button id="add-todo-btn" onclick="addTodo()">➕</button>
     </div>
+    <!-- 설명 입력 필드 (초기 숨김) -->
+    <div id="desc-container">
+      <input type="text" id="description" placeholder="설명을 입력하세요" />
+    </div>
+
+    <!-- 할 일 목록 -->
     <ul id="todo-list"></ul>
+    <!-- 투두가 있을 때만 보이는 "모두 삭제" 버튼 -->
     <button class="delete-all-btn" onclick="deleteAllTodos()">모두 삭제</button>
   </div>
+
+  <!-- 설명 필드 토글 스크립트 -->
+  <script>
+    const toggleDescBtn = document.getElementById('toggle-desc');
+    const descContainer = document.getElementById('desc-container');
+
+    toggleDescBtn.addEventListener('click', () => {
+      // getComputedStyle를 사용하여 초기 상태도 올바르게 읽음
+      const currentDisplay = window.getComputedStyle(descContainer).display;
+      if (currentDisplay === 'none') {
+        // 설명 입력란 열기
+        descContainer.style.display = 'block';
+        toggleDescBtn.textContent = '취소';
+      } else {
+        // 설명 입력란 닫기
+        descContainer.style.display = 'none';
+        toggleDescBtn.textContent = '설명 추가';
+      }
+    });
+  </script>
 </body>
 </html>
