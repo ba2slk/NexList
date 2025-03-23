@@ -7,6 +7,7 @@ async function loadTodos() {
     const list = document.getElementById("todo-list");
     list.innerHTML = "";
 
+    // 투두 리스트 생성
     todos.forEach(todo => {
         const item = document.createElement("li");
 
@@ -26,6 +27,16 @@ async function loadTodos() {
         `;
         list.appendChild(item);
     });
+
+    // "모두 삭제" 버튼 표시/숨김 로직
+    const deleteAllBtn = document.querySelector(".delete-all-btn");
+    if (todos.length > 0) {
+        // 투두 항목이 하나 이상이면 버튼 표시
+        deleteAllBtn.style.display = "block";
+    } else {
+        // 투두가 없으면 버튼 숨기기
+        deleteAllBtn.style.display = "none";
+    }
 }
 
 // 할 일 추가
@@ -49,6 +60,7 @@ async function addTodo() {
     loadTodos();
 }
 
+// 완료 상태 토글
 async function toggleComplete(id) {
     const response = await fetch(`${API_URL}/${id}`);
     const todo = await response.json();
@@ -65,7 +77,6 @@ async function toggleComplete(id) {
 
     loadTodos();
 }
-
 
 // 개별 할 일 삭제
 async function deleteTodo(id) {
@@ -120,7 +131,7 @@ async function saveEdit(id) {
     loadTodos();
 }
 
-// window 객체에 함수 추가 (전역에서 접근 가능하도록)
+// 전역에서 접근할 수 있도록 window 객체에 함수 등록
 window.addTodo = addTodo;
 window.deleteTodo = deleteTodo;
 window.deleteAllTodos = deleteAllTodos;
