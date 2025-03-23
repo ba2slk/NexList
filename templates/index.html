@@ -1,122 +1,156 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FastAPI Todo</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            padding: 0;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NexList To-Do</title>
+  <style>
+    /* 전체 배경 */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f2f5;
+    }
 
-        div {
-            margin-bottom: 10px;
-        }
+    /* 상단 고정 네비게이션 바 */
+    header {
+      position: fixed;  /* 스크롤해도 항상 화면 상단에 고정 */
+      top: 0;
+      left: 0;
+      width: 100%;
+      background-color: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+    }
 
-        input {
-            margin: 5px;
-            padding: 8px;
-            width: 250px;
-        }
+    /* NexList 앵커 */
+    .logo {
+      font-size: 20px;
+      font-weight: bold;
+      color: #333;
+      text-decoration: none;
+    }
 
-        button {
-            margin: 5px;
-            padding: 8px 15px;
-            font-size: 16px;
-            cursor: pointer;
-        }
+    /* 중앙 컨테이너 */
+    .container {
+      background: #fff;
+      margin: 100px auto 0 auto;  /* 네비게이션바 높이만큼 아래에서 시작 */
+      padding: 30px 40px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      width: 600px;
+    }
 
-        ul {
-            list-style: none;
-            padding: 0;
-        }
+    /* 제목 */
+    .container h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+    }
 
-        li {
-            margin: 5px 0;
-            padding: 10px;
-            border: 1px solid #ccc;
-            width: 400px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: #f9f9f9;
-            border-radius: 5px;
-        }
+    /* 입력 폼 스타일 */
+    .form-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .form-group input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+    .form-group button {
+      padding: 10px 20px;
+      border: none;
+      background: #28a745;
+      color: #fff;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
 
-        li span {
-            display: flex;
-            align-items: center;
-            flex-grow: 1;
-            font-size: 16px;
-        }
+    /* To-Do 리스트 스타일 */
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      background: #fafafa;
+      border: 1px solid #e0e0e0;
+      border-radius: 5px;
+      padding: 15px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    li span {
+      flex: 1;
+      font-size: 16px;
+      color: #555;
+    }
+    .button-group {
+      display: flex;
+      gap: 10px;
+    }
+    .button-group button {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+      color: #fff;
+    }
+    .complete-btn {
+      background: #ffc107;
+    }
+    .edit-btn {
+      background: #007bff;
+    }
+    .delete-btn {
+      background: #dc3545;
+    }
 
-        .button-group {
-            display: flex;
-            gap: 5px;
-            align-items: center; 
-        }
-
- 
-        li button {
-            border: none;
-            padding: 8px 12px; 
-            cursor: pointer;
-            border-radius: 3px;
-            height: 24px; 
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-        }
-
-        /* 삭제 버튼 */
-        .delete-btn {
-            background-color: green;
-            color: white;
-        }
-
-        /* 수정 버튼 */
-        .edit-btn {
-            background-color: blue;
-            color: white;
-        }
-
-        /* 완료 버튼 */
-        .complete-btn {
-            background-color: orange;
-            color: white;
-        }
-
-        /* 전체 삭제 버튼 */
-        .delete-all-btn {
-            background-color: #ff4d4d;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            margin-top: 10px;
-            border-radius: 5px;
-        }
-
-    </style>
-    
-    <script>
-        window.API_URL = "{{ api_url }}";
-    </script>
-    <script type="module" src="/static/js/main.js"></script>
+    /* 모두 삭제 버튼 */
+    .delete-all-btn {
+      width: 100%;
+      padding: 10px;
+      background: #dc3545;
+      border: none;
+      border-radius: 5px;
+      color: #fff;
+      font-size: 16px;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+  </style>
+  <script>
+    /* FastAPI 서버에서 주입해주는 API_URL 사용 */
+    window.API_URL = "{{ api_url }}";
+  </script>
+  <script type="module" src="/static/js/main.js"></script>
 </head>
 <body>
-    <h2>To-Do List</h2>
+  <!-- 상단 고정 영역 -->
+  <header>
+    <a href="#" class="logo">NexList</a>
+  </header>
 
-    <div>
-        <input type="text" id="task" placeholder="할 일 입력">
-        <input type="text" id="description" placeholder="설명 입력">
-        <button onclick="addTodo()">Add To-Do</button>
+  <!-- 메인 컨테이너 -->
+  <div class="container">
+    <h2>할 일 목록</h2>
+    <div class="form-group">
+      <input type="text" id="task" placeholder="할 일을 입력하세요" />
+      <input type="text" id="description" placeholder="설명을 입력하세요" />
+      <button onclick="addTodo()">추가</button>
     </div>
-
     <ul id="todo-list"></ul>
-
-    <button class="delete-all-btn" onclick="deleteAllTodos()">Delete All</button>
+    <button class="delete-all-btn" onclick="deleteAllTodos()">모두 삭제</button>
+  </div>
 </body>
 </html>
