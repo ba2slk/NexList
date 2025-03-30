@@ -8,24 +8,22 @@
   <style>
     /* 파스텔 색상 변수 */
     :root {
-      --pastel-blue:   #A5D8FF; /* 설명 추가 버튼 */
-      --pastel-green:  #B2F2BB; /* 할 일 추가 버튼 */
-      --pastel-red:    #FFC9C9; /* 삭제 버튼, 모두 삭제 버튼 */
-      --pastel-purple: #D0BFFF; /* 수정(Edit), 완료(Done), 저장(Save) */
+      --pastel-blue:   #A5D8FF;
+      --pastel-green:  #B2F2BB;
+      --pastel-red:    #FFC9C9;
+      --pastel-purple: #D0BFFF;
     }
 
-    /* 전체 배경 및 기본 폰트 */
     body {
       margin: 0;
       padding: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #F3F8FB;
       color: #555;
-      /* 하단 고정 입력폼이 겹치지 않도록 여분의 패딩 추가 */
+      /* 하단 입력 영역이 콘텐츠와 겹치지 않도록 여분 패딩 */
       padding-bottom: 180px;
     }
 
-    /* 상단 고정 네비게이션 바 */
     header {
       position: fixed;
       top: 0;
@@ -44,7 +42,6 @@
       text-decoration: none;
     }
 
-    /* 메인 컨테이너 (할 일 목록 전용) */
     .container {
       background: #fff;
       margin: 100px auto 0 auto;
@@ -59,53 +56,6 @@
       margin-bottom: 20px;
     }
 
-    /* 입력 폼 스타일 (하단 입력폼 내부 동일) */
-    .form-group {
-      display: flex;
-      gap: 10px;
-    }
-    .form-group input[type="text"] {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      font-size: 16px;
-      color: #555;
-      }
-    /* 설명 추가 버튼 (토글) */
-    #toggle-desc {
-      background: var(--pastel-blue);
-      border: none;
-      border-radius: 5px;
-      font-size: 16px;
-      cursor: pointer;
-      padding: 10px 20px;
-      color: #555;
-    }
-    /* 할 일 추가 버튼 */
-    #add-todo-btn {
-      background: var(--pastel-green);
-      border: none;
-      border-radius: 5px;
-      font-size: 16px;
-      cursor: pointer;
-      padding: 10px 20px;
-      color: #555;
-    }
-    /* 설명 입력 필드 영역 (초기 숨김) */
-    #desc-container {
-      margin-bottom: 20px;
-      display: none;
-    }
-    #desc-container input[type="text"] {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      font-size: 16px;
-      color: #555;
-    }
-    /* To-Do 리스트 스타일 */
     ul {
       list-style: none;
       padding: 0;
@@ -146,7 +96,6 @@
     .delete-btn {
       background: var(--pastel-red);
     }
-    /* 모두 삭제 버튼 (기본 숨김) */
     .delete-all-btn {
       width: 100%;
       padding: 10px;
@@ -159,19 +108,58 @@
       cursor: pointer;
       display: none;
     }
-    /* 새로 추가된 하단 입력폼 컨테이너 */
+
+    /* 새 하단 입력창 스타일 */
     #bottom-input {
-    position: fixed;
-    bottom: 40px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 600px;
-    background: #fff;
-    /* 상하 20px, 좌우 40px */
-    padding: 20px 40px;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-  }
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      background: #fff;
+      padding: 20px 40px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+    /* 플레이스홀더 (버튼처럼 보임) */
+    .input-placeholder {
+      font-size: 16px;
+      color: #555;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background: #fff;
+      transition: background 0.3s;
+      cursor: pointer;
+    }
+    .input-placeholder:hover {
+      background: #f0f0f0;
+    }
+    /* 활성화된 입력 영역 */
+    #active-input {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    #active-input input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 16px;
+      color: #555;
+    }
+    #active-input input[type="text"]:focus {
+      outline: none;
+      border-color: var(--pastel-green);
+    }
+    #active-input input[type="date"] {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 16px;
+      color: #555;
+    }
   </style>
   <script>
     // FastAPI 서버에서 주입해주는 API_URL
@@ -180,46 +168,23 @@
   <script type="module" src="/static/js/main.js"></script>
 </head>
 <body>
-  <!-- 좌측 상단 고정 NexList 앵커 -->
   <header>
     <a href="{{ url_for('read_root') }}" class="logo">NexList</a>
   </header>
   <div class="container">
     <h2>오늘 할 일💡</h2>
-    <!-- 할 일 목록 -->
     <ul id="todo-list"></ul>
-    <!-- 투두가 있을 때만 보이는 "모두 삭제" 버튼 -->
     <button class="delete-all-btn" onclick="deleteAllTodos()">모두 삭제</button>
   </div>
-  <!-- 하단에 고정된 입력 폼 -->
   <div id="bottom-input">
-    <div class="form-group">
-      <input type="text" id="task" placeholder="할 일을 입력하세요" />
-      <!-- 설명 추가 버튼 (토글) -->
-      <button id="toggle-desc" type="button">설명 추가</button>
-      <!-- 할 일 추가 버튼 -->
-      <button id="add-todo-btn" onclick="addTodo()">➕</button>
-    </div>
-    <!-- 설명 입력 필드 (초기 숨김) -->
-    <div id="desc-container">
-      <input type="text" id="description" placeholder="설명을 입력하세요" />
+    <!-- 처음에는 플레이스홀더가 보임 -->
+    <div id="placeholder" class="input-placeholder">할 일을 입력하세요</div>
+    <!-- 클릭하면 활성화되는 입력 영역 (기본 숨김) -->
+    <div id="active-input" style="display: none;">
+      <input type="text" id="todo-input" placeholder="할 일을 입력하세요" />
+      <!-- 텍스트 입력 시 나타나는 달력 (처음엔 숨김) -->
+      <input type="date" id="todo-date" style="display: none;" />
     </div>
   </div>
-  <!-- 설명 필드 토글 스크립트 -->
-  <script>
-    const toggleDescBtn = document.getElementById('toggle-desc');
-    const descContainer = document.getElementById('desc-container');
-
-    toggleDescBtn.addEventListener('click', () => {
-      const currentDisplay = window.getComputedStyle(descContainer).display;
-      if (currentDisplay === 'none') {
-        descContainer.style.display = 'block';
-        toggleDescBtn.textContent = '취소';
-      } else {
-        descContainer.style.display = 'none';
-        toggleDescBtn.textContent = '설명 추가';
-      }
-    });
-  </script>
 </body>
 </html>
