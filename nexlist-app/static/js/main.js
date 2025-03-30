@@ -12,7 +12,7 @@ async function loadTodos() {
         let dueDateStr = "";
         if (todo.due_date) {
             const dateObj = new Date(todo.due_date);
-            dueDateStr = ` (${dateObj.toLocaleDateString()})`;
+            dueDateStr = ` (~${dateObj.toLocaleDateString()})`;
         }
         item.innerHTML = `
             <span id="text-${todo.id}">

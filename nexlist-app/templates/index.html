@@ -43,11 +43,10 @@
     }
 
     .container {
-      background: #fff;
+      background: none;
       margin: 100px auto 0 auto;
       padding: 30px 40px;
       border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
       width: 600px;
     }
     .container h2 {
@@ -65,10 +64,11 @@
       border: 1px solid #e0e0e0;
       border-radius: 5px;
       padding: 15px;
-      margin-bottom: 10px;
+      margin-bottom: 5px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
     }
     li span {
       flex: 1;
@@ -107,6 +107,7 @@
       margin-top: 20px;
       cursor: pointer;
       display: none;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
     }
 
     /* 새 하단 입력창 스타일 */
@@ -117,20 +118,24 @@
       transform: translateX(-50%);
       width: 600px;
       background: #fff;
-      padding: 20px 40px;
+      /* 기존 padding 유지 */
+      padding: 10px 10px;
       border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      /* height: 40px; 는 제거 -> 내용에 맞춰 높이 자동 */
+      box-sizing: border-box;
     }
     /* 플레이스홀더 (버튼처럼 보임) */
     .input-placeholder {
       font-size: 16px;
       color: #555;
       padding: 10px;
-      border: 1px solid #ddd;
       border-radius: 5px;
       background: #fff;
       transition: background 0.3s;
       cursor: pointer;
+      line-height: 1.5;
+      box-sizing: border-box;
     }
     .input-placeholder:hover {
       background: #f0f0f0;
@@ -144,10 +149,17 @@
     #active-input input[type="text"] {
       flex: 1;
       padding: 10px;
-      border: 1px solid #ddd;
       border-radius: 5px;
-      font-size: 16px;
+      font-size: 16px;  
       color: #555;
+      /* 기존 테두리 제거 */
+      border: none;
+      outline: none;
+      box-shadow: none;
+      background: none;
+      /* placeholder와 동일한 line-height와 box-sizing */
+      line-height: 1.5;
+      box-sizing: border-box;
     }
     #active-input input[type="text"]:focus {
       outline: none;
@@ -159,6 +171,13 @@
       border-radius: 5px;
       font-size: 16px;
       color: #555;
+    }
+    /* 전역 input[type="text"] 설정 (이미 사용 중이면 중복 제외 가능) */
+    input[type="text"] {
+      border: none;
+      outline: none;
+      box-shadow: none;
+      background: none;
     }
   </style>
   <script>
@@ -172,16 +191,16 @@
     <a href="{{ url_for('read_root') }}" class="logo">NexList</a>
   </header>
   <div class="container">
-    <h2>오늘 할 일💡</h2>
+    <h2>할 일 목록💡</h2>
     <ul id="todo-list"></ul>
     <button class="delete-all-btn" onclick="deleteAllTodos()">모두 삭제</button>
   </div>
   <div id="bottom-input">
     <!-- 처음에는 플레이스홀더가 보임 -->
-    <div id="placeholder" class="input-placeholder">할 일을 입력하세요</div>
+    <div id="placeholder" class="input-placeholder">＋ 할 일을 입력하세요</div>
     <!-- 클릭하면 활성화되는 입력 영역 (기본 숨김) -->
     <div id="active-input" style="display: none;">
-      <input type="text" id="todo-input" placeholder="할 일을 입력하세요" />
+      <input type="text" id="todo-input" placeholder="작업" />
       <!-- 텍스트 입력 시 나타나는 달력 (처음엔 숨김) -->
       <input type="date" id="todo-date" style="display: none;" />
     </div>
