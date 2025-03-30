@@ -4,6 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from typing import Optional
+from datetime import datetime
 import json
 from dotenv import load_dotenv
 import os
@@ -14,8 +16,10 @@ JSON_PATH = "./todo.json"
 
 class TodoItem(BaseModel):
     task: str
-    description: str
+    due_date: Optional[str] = None
 
+    class Config:
+        extra = "ignore"
 
 class TodoUpdate(BaseModel):
     completed: bool
@@ -81,6 +85,9 @@ def create_todo(item: TodoItem):
     idx += 1
     item_dict["id"] = idx
     item_dict["completed"] = False
+    if not item_dict.get("due_date"):
+        item_dict["due_date"] = datetime.now().isoformat()
+    print(item_dict)
     todo_list.append(item_dict)
     dao.save_todo_list(todo_list)
 
