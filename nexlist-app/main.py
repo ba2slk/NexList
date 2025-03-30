@@ -139,7 +139,7 @@ def edit_item(id: int, item: TodoItem):
         raise HTTPException(status_code=404, detail="Todo not found")
     
     target["task"] = item.task
-    target["description"] = item.description
+    target["due_date"] = item.due_date
     dao.save_todo_list(todo_list)
 
     return {"message": f"Todo {id} updated successfully"}

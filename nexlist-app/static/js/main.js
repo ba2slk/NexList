@@ -9,17 +9,26 @@ async function loadTodos() {
 
     todos.forEach(todo => {
         const item = document.createElement("li");
+
+        // 날짜 표시용 문자열
         let dueDateStr = "";
+        let isoDateValue = "";  // date input에 들어갈 YYYY-MM-DD 형식
+
         if (todo.due_date) {
             const dateObj = new Date(todo.due_date);
             dueDateStr = ` (~${dateObj.toLocaleDateString()})`;
+            // HTML의 <input type="date">는 "YYYY-MM-DD" 형식을 사용해야 함
+            isoDateValue = dateObj.toISOString().slice(0, 10);
         }
+
+        // 수정 시 텍스트 인풋 -> 달력 인풋으로 변경
+        // 기존 edit-due-${todo.id}를 text -> date로 바꾸고, value는 isoDateValue
         item.innerHTML = `
             <span id="text-${todo.id}">
                 ${todo.completed ? "✅" : "❌"} ${todo.task}${dueDateStr}
             </span>
             <input type="text" id="edit-task-${todo.id}" value="${todo.task}" style="display:none;">
-            <input type="text" id="edit-due-${todo.id}" value="${todo.due_date || ''}" style="display:none;">
+            <input type="date" id="edit-due-${todo.id}" value="${isoDateValue}" style="display:none;">
             <div class="button-group">
                 <button class="complete-btn" onclick="toggleComplete(${todo.id})">
                     ${todo.completed ? "👎" : "👍"}
@@ -48,7 +57,7 @@ async function addTodo() {
     }
     // 날짜 미선택 시 오늘 날짜를 기본값으로 설정
     if (!dueDate) {
-      dueDate = new Date().toISOString();
+        dueDate = new Date().toISOString();
     }
     
     const payload = { task, due_date: dueDate, completed: false };
@@ -74,11 +83,13 @@ async function toggleComplete(id) {
     const response = await fetch(`${API_URL}/${id}`);
     const todo = await response.json();
     const updatedCompleted = !todo.completed;
+
     await fetch(`${API_URL}/${id}/toggle`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ completed: updatedCompleted })
     });
+
     loadTodos();
 }
 
@@ -101,13 +112,16 @@ function toggleEdit(id) {
     const editDue = document.getElementById(`edit-due-${id}`);
     const editBtn = document.getElementById(`edit-btn-${id}`);
 
+    // Edit → Save
     if (editTask.style.display === "none") {
         textSpan.style.display = "none";
         editTask.style.display = "inline";
         editDue.style.display = "inline";
-        editBtn.textContent = "Save";
+        editBtn.textContent = "💾";
         editBtn.setAttribute("onclick", `saveEdit(${id})`);
-    } else {
+    } 
+    // Save → Edit
+    else {
         textSpan.style.display = "inline";
         editTask.style.display = "none";
         editDue.style.display = "none";
@@ -119,16 +133,20 @@ function toggleEdit(id) {
 // 수정 내용 저장
 async function saveEdit(id) {
     const newTask = document.getElementById(`edit-task-${id}`).value;
-    const newDue = document.getElementById(`edit-due-${id}`).value;
+    const newDue = document.getElementById(`edit-due-${id}`).value;  // date input
     if (!newTask) {
         alert("할 일을 입력하세요!");
         return;
     }
+
+    // date input은 "YYYY-MM-DD" 형태 문자열
+    // 백엔드에서 원하는 대로 저장
     await fetch(`${API_URL}/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ task: newTask, due_date: newDue })
     });
+
     loadTodos();
 }
 
@@ -155,28 +173,25 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 엔터키 입력 시 할 일 추가
+    // ESC 키 -> 입력창 초기화
     todoInput.addEventListener("keydown", (e) => {
         if (e.key === "Escape") {
-            // 입력값 초기화
             todoInput.value = "";
             dateInput.value = "";
-            // 달력 숨기기
             dateInput.style.display = "none";
-            // 활성화된 입력 영역 숨기고 플레이스홀더 보이기
-            document.getElementById("active-input").style.display = "none";
-            document.getElementById("placeholder").style.display = "block";
-        }   
-        else if (e.key === "Enter") {
+            activeInputContainer.style.display = "none";
+            placeholder.style.display = "block";
+        } else if (e.key === "Enter") {
             addTodo();
         }
     });
 
+    // 달력에서도 엔터 입력 시 할 일 추가
     dateInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
             addTodo();
         }
-    })
+    });
 });
 
 // 전역 함수 노출 (버튼 호출용)
