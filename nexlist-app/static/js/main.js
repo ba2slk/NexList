@@ -10,19 +10,24 @@ async function loadTodos() {
     todos.forEach(todo => {
         const item = document.createElement("li");
 
-        // 날짜 표시용 문자열
-        let dueDateStr = "";
-        let isoDateValue = "";  // date input에 들어갈 YYYY-MM-DD 형식
-
+        // 기한 초과 여부 계산 (완료되지 않은 항목만)
+        let isOverdue = false;
         if (todo.due_date) {
-            const dateObj = new Date(todo.due_date);
-            dueDateStr = ` (~${dateObj.toLocaleDateString()})`;
-            // HTML의 <input type="date">는 "YYYY-MM-DD" 형식을 사용해야 함
-            isoDateValue = dateObj.toISOString().slice(0, 10);
+            const due = new Date(todo.due_date);
+            const now = new Date();
+            if (due < now && !todo.completed) {
+                isOverdue = true;
+            }
         }
 
-        // 수정 시 텍스트 인풋 -> 달력 인풋으로 변경
-        // 기존 edit-due-${todo.id}를 text -> date로 바꾸고, value는 isoDateValue
+        let dueDateStr = "";
+        let isoDateValue = "";
+        if (todo.due_date) {
+            const due = new Date(todo.due_date);
+            dueDateStr = ` (~${due.toLocaleDateString()})`;
+            isoDateValue = due.toISOString().slice(0, 10);
+        }
+
         item.innerHTML = `
             <span id="text-${todo.id}">
                 ${todo.completed ? "✅" : "❌"} ${todo.task}${dueDateStr}
@@ -37,6 +42,12 @@ async function loadTodos() {
                 <button class="delete-btn" onclick="deleteTodo(${todo.id})">➖</button>
             </div>
         `;
+
+        // 기한이 지난 항목은 연한 빨간 배경 적용
+        if (isOverdue) {
+            item.style.backgroundColor = "#ffe0e0";
+        }
+
         list.appendChild(item);
     });
 
@@ -50,16 +61,15 @@ async function addTodo() {
     const dateInput = document.getElementById("todo-date");
     const task = todoInput.value.trim();
     let dueDate = dateInput.value;
-    
+
     if (!task) {
         alert("할 일을 입력하세요!");
         return;
     }
-    // 날짜 미선택 시 오늘 날짜를 기본값으로 설정
     if (!dueDate) {
         dueDate = new Date().toISOString();
     }
-    
+
     const payload = { task, due_date: dueDate, completed: false };
 
     await fetch(API_URL, {
@@ -68,7 +78,6 @@ async function addTodo() {
         body: JSON.stringify(payload)
     });
 
-    // 입력값 초기화 및 UI 원상복구
     todoInput.value = "";
     dateInput.value = "";
     dateInput.style.display = "none";
@@ -83,13 +92,11 @@ async function toggleComplete(id) {
     const response = await fetch(`${API_URL}/${id}`);
     const todo = await response.json();
     const updatedCompleted = !todo.completed;
-
     await fetch(`${API_URL}/${id}/toggle`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ completed: updatedCompleted })
     });
-
     loadTodos();
 }
 
@@ -112,16 +119,13 @@ function toggleEdit(id) {
     const editDue = document.getElementById(`edit-due-${id}`);
     const editBtn = document.getElementById(`edit-btn-${id}`);
 
-    // Edit → Save
     if (editTask.style.display === "none") {
         textSpan.style.display = "none";
         editTask.style.display = "inline";
         editDue.style.display = "inline";
-        editBtn.textContent = "💾";
+        editBtn.textContent = "Save";
         editBtn.setAttribute("onclick", `saveEdit(${id})`);
-    } 
-    // Save → Edit
-    else {
+    } else {
         textSpan.style.display = "inline";
         editTask.style.display = "none";
         editDue.style.display = "none";
@@ -133,20 +137,16 @@ function toggleEdit(id) {
 // 수정 내용 저장
 async function saveEdit(id) {
     const newTask = document.getElementById(`edit-task-${id}`).value;
-    const newDue = document.getElementById(`edit-due-${id}`).value;  // date input
+    const newDue = document.getElementById(`edit-due-${id}`).value;
     if (!newTask) {
         alert("할 일을 입력하세요!");
         return;
     }
-
-    // date input은 "YYYY-MM-DD" 형태 문자열
-    // 백엔드에서 원하는 대로 저장
     await fetch(`${API_URL}/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ task: newTask, due_date: newDue })
     });
-
     loadTodos();
 }
 
@@ -157,14 +157,12 @@ window.addEventListener('DOMContentLoaded', () => {
     const todoInput = document.getElementById("todo-input");
     const dateInput = document.getElementById("todo-date");
 
-    // 플레이스홀더 클릭 시 실제 입력 UI 표시
     placeholder.addEventListener("click", () => {
         placeholder.style.display = "none";
         activeInputContainer.style.display = "flex";
         todoInput.focus();
     });
 
-    // 입력 시 내용이 있으면 달력(날짜 입력) 표시
     todoInput.addEventListener("input", () => {
         if (todoInput.value.trim() !== "") {
             dateInput.style.display = "block";
@@ -173,7 +171,6 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // ESC 키 -> 입력창 초기화
     todoInput.addEventListener("keydown", (e) => {
         if (e.key === "Escape") {
             todoInput.value = "";
@@ -186,7 +183,6 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 달력에서도 엔터 입력 시 할 일 추가
     dateInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
             addTodo();
@@ -194,7 +190,6 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// 전역 함수 노출 (버튼 호출용)
 window.deleteTodo = deleteTodo;
 window.deleteAllTodos = deleteAllTodos;
 window.toggleComplete = toggleComplete;
