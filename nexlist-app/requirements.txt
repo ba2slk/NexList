@@ -54,3 +54,7 @@ uvicorn==0.34.0
 watchfiles==1.0.4
 websockets==15.0.1
 zstandard==0.23.0
+pytest
+pytest-html
+httpx
+pytest-cov
