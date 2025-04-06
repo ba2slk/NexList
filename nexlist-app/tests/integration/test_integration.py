@@ -4,7 +4,7 @@ import pytest
 from dotenv import load_dotenv
 import os
 
-load_dotenv()
+load_dotenv("/home/ubuntu/env_var/.env")
 
 # 실제 배포된 FastAPI 서버의 URL
 BASE_URL = os.getenv("BASE_URL")
