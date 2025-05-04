@@ -179,6 +179,33 @@
       box-shadow: none;
       background: none;
     }
+
+    input[type="checkbox"] {
+      transform: scale(0.8);
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      accent-color: #B2F2BB;
+    }
+
+    .due-today { color: rgb(7, 173, 40); }
+    .due-overdue { color: rgb(234, 68, 87); }
+    .due-default { color: black; }
+
+
+    .completed {
+      color: gray;
+      text-decoration: line-through;
+    }
+
+    .completed .due-today,
+    .completed .due-overdue,
+    .completed .due-default {
+      color: inherit;
+    }
+
+
+
   </style>
   <script>
     // FastAPI 서버에서 주입해주는 API_URL

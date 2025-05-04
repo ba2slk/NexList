@@ -10,7 +10,7 @@ async function loadTodos() {
     todos.forEach(todo => {
         const item = document.createElement("li");
 
-        // 기한 초과 여부 계산 (완료되지 않은 항목만)
+        // 기한 초과 여부 계산
         let isOverdue = false;
         if (todo.due_date) {
             const due = new Date(todo.due_date);
@@ -24,29 +24,35 @@ async function loadTodos() {
         let isoDateValue = "";
         if (todo.due_date) {
             const due = new Date(todo.due_date);
-            dueDateStr = ` (~${due.toLocaleDateString()})`;
+            const today = new Date();
+            const isDueToday = due.getFullYear() === today.getFullYear() &&
+                               due.getMonth() === today.getMonth() &&
+                               due.getDate() === today.getDate();
+
+            let dueColor = 'color: black;' // default
+            if (isDueToday) {
+                dueColor = 'color: rgb(7, 173, 40)';
+            }
+            else if (due < today){
+                dueColor = 'color: rgb(234, 68, 87)';
+            }
+
+            dueDateStr = `<span class="${isDueToday ? 'due-today' : isOverdue ? 'due-overdue' : 'due-default'}">(~${due.toLocaleDateString()})</span>`;
             isoDateValue = due.toISOString().slice(0, 10);
         }
 
         item.innerHTML = `
-            <span id="text-${todo.id}">
-                ${todo.completed ? "✅" : "❌"} ${todo.task}${dueDateStr}
+            <input type="checkbox" id="check-${todo.id}" ${todo.completed ? "checked" : ""} onchange="toggleComplete(${todo.id})">
+            <span id="text-${todo.id}" class="${todo.completed ? 'completed': ''}">
+                ${todo.task} ${dueDateStr}
             </span>
             <input type="text" id="edit-task-${todo.id}" value="${todo.task}" style="display:none;">
             <input type="date" id="edit-due-${todo.id}" value="${isoDateValue}" style="display:none;">
             <div class="button-group">
-                <button class="complete-btn" onclick="toggleComplete(${todo.id})">
-                    ${todo.completed ? "👎" : "👍"}
-                </button>
                 <button class="edit-btn" id="edit-btn-${todo.id}" onclick="toggleEdit(${todo.id})">✏️</button>
                 <button class="delete-btn" onclick="deleteTodo(${todo.id})">➖</button>
             </div>
         `;
-
-        // 기한이 지난 항목은 연한 빨간 배경 적용
-        if (isOverdue) {
-            item.style.backgroundColor = "#ffe0e0";
-        }
 
         list.appendChild(item);
     });
@@ -66,6 +72,7 @@ async function addTodo() {
         alert("할 일을 입력하세요!");
         return;
     }
+
     if (!dueDate) {
         dueDate = new Date().toISOString();
     }
