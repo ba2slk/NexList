@@ -10,6 +10,8 @@ import json
 from dotenv import load_dotenv
 import os
 
+TODO_NOT_FOUND_DETAIL = "Todo not found"
+
 load_dotenv()
 
 JSON_PATH = "./todo.json"
@@ -47,12 +49,10 @@ def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request, "api_url": api_url})
 
 
-def find_todo_by_id(id: int) -> dict:
+def find_todo_by_id(id: int) -> Optional[dict]:
     for todo in todo_list:
         if todo["id"] == id:
             return todo
-    return None
-
 
 class DAO():
     def load_todo_list(self) -> list[dict]:
@@ -116,7 +116,6 @@ def delete_todo_list():
     dao.save_todo_list(todo_list)
     global idx
     idx = 0
-    return
 
 
 # 단일 아이템 삭제
@@ -125,10 +124,9 @@ def delete_single_todo(item_id: int):
     global idx
     target = find_todo_by_id(item_id)
     if target is None:
-        raise HTTPException(status_code=404, detail="Todo not found")
+        raise HTTPException(status_code=404, detail=TODO_NOT_FOUND_DETAIL)
     todo_list.remove(target)
     dao.save_todo_list(todo_list)
-    return
 
 
 # todo 내용 변경하기
@@ -136,7 +134,7 @@ def delete_single_todo(item_id: int):
 def edit_item(id: int, item: TodoItem):
     target = find_todo_by_id(id)
     if target is None:
-        raise HTTPException(status_code=404, detail="Todo not found")
+        raise HTTPException(status_code=404, detail=TODO_NOT_FOUND_DETAIL)
     
     target["task"] = item.task
     target["due_date"] = item.due_date
@@ -150,7 +148,7 @@ def edit_item(id: int, item: TodoItem):
 def toggle_todo_completed(id: int, update: TodoUpdate):
     target = find_todo_by_id(id)
     if target is None:
-        raise HTTPException(status_code=404, detail="Todo not found")
+        raise HTTPException(status_code=404, detail=TODO_NOT_FOUND_DETAIL)
     
     target["completed"] = update.completed
     return {"message": f"Todo {id} completed status updated successfully", "completed": target["completed"]}
