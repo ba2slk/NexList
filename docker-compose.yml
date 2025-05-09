@@ -8,6 +8,8 @@ services:
     container_name: nexlist
     ports:
       - "5000:5000"
+    volumes:
+      - ../env_var/.env:/app/.env
 
   sonarqube:
       image: sonarqube:latest
