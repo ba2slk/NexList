@@ -52,6 +52,7 @@ templates = Jinja2Templates(directory=TEMPLATE_DIR)
 @app.get("/", response_class=HTMLResponse)
 def read_root(request: Request):
     api_url = os.getenv("API_URL", "http://127.0.0.1:8000/todo")
+    print(f"INFO: API_URL={api_url}")
     return templates.TemplateResponse("index.html", {"request": request, "api_url": api_url})
 
 
