@@ -58,3 +58,5 @@ pytest
 pytest-html
 httpx
 pytest-cov
+prometheus-fastapi-instrumentator
+prometheus-client

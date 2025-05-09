@@ -9,6 +9,8 @@ from datetime import datetime
 import json
 from dotenv import load_dotenv
 import os
+from prometheus_fastapi_instrumentator import Instrumentator
+
 
 TODO_NOT_FOUND_DETAIL = "Todo not found"
 
@@ -30,6 +32,10 @@ class TodoUpdate(BaseModel):
 app = FastAPI(debug=True)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Prometheus 메트릭스 엔드포인트 (/metrics)
+Instrumentator().instrument(app).expose(app, endpoint="/metrics")
+
 
 app.add_middleware(
     CORSMiddleware,
