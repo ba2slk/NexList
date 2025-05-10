@@ -11,13 +11,18 @@ from dotenv import load_dotenv
 import os
 from prometheus_fastapi_instrumentator import Instrumentator
 
-
+# Constants
+JSON_PATH = "./todo.json"
 TODO_NOT_FOUND_DETAIL = "Todo not found"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
 
+
+# 환경변수 불러오기
 load_dotenv()
 
-JSON_PATH = "./todo.json"
 
+# Base Models
 class TodoItem(BaseModel):
     task: str
     due_date: Optional[str] = None
@@ -29,38 +34,7 @@ class TodoUpdate(BaseModel):
     completed: bool
 
 
-app = FastAPI(debug=True)
-
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-# Prometheus 메트릭스 엔드포인트 (/metrics)
-Instrumentator().instrument(app).expose(app, endpoint="/metrics")
-
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"], 
-    allow_credentials=True,
-    allow_methods=["*"],  
-    allow_headers=["*"], 
-)
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
-
-templates = Jinja2Templates(directory=TEMPLATE_DIR)
-@app.get("/", response_class=HTMLResponse)
-def read_root(request: Request):
-    api_url = os.getenv("API_URL", "http://127.0.0.1:8000/todo")
-    print(f"INFO: API_URL={api_url}")
-    return templates.TemplateResponse("index.html", {"request": request, "api_url": api_url})
-
-
-def find_todo_by_id(id: int) -> Optional[dict]:
-    for todo in todo_list:
-        if todo["id"] == id:
-            return todo
-
+# Data Access Object: LOAD(SAVE) todo items from(to) the list
 class DAO():
     def load_todo_list(self) -> list[dict]:
         try:
@@ -74,10 +48,12 @@ class DAO():
             json.dump(todo_list, file, indent=4, ensure_ascii=False)
 
 
+# DAO & todo_list initialization
 dao = DAO()
 todo_list: list[dict] = dao.load_todo_list()
 
 
+# Set Index
 idx = 0
 for todo in todo_list:
     cur = int(todo["id"])
@@ -85,6 +61,42 @@ for todo in todo_list:
         idx = cur
 
 
+# FastAPI Configuration
+app = FastAPI(debug=True)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_credentials=True,
+    allow_methods=["*"],  
+    allow_headers=["*"], 
+)
+
+
+# Prometheus Metrics Endpoint (/metrics)
+Instrumentator().instrument(app).expose(app, endpoint="/metrics")
+
+
+# Template
+templates = Jinja2Templates(directory=TEMPLATE_DIR)
+
+
+# Helper Function: id로 todo item 찾기
+def find_todo_by_id(id: int) -> Optional[dict]:
+    for todo in todo_list:
+        if todo["id"] == id:
+            return todo
+        
+
+# root 진입 시 js 코드에 API_URL 주입
+@app.get("/", response_class=HTMLResponse)
+def read_root(request: Request):
+    api_url = os.getenv("API_URL", "http://127.0.0.1:8000/todo")
+    print(f"INFO: API_URL={api_url}")
+    return templates.TemplateResponse("index.html", {"request": request, "api_url": api_url})
+
+
+# 할 일 추가하기
 @app.post("/todo", status_code=status.HTTP_201_CREATED)
 def create_todo(item: TodoItem):
     global idx
@@ -97,7 +109,6 @@ def create_todo(item: TodoItem):
     print(item_dict)
     todo_list.append(item_dict)
     dao.save_todo_list(todo_list)
-
     return {"message": f"Successfully added <{item_dict['task']}> to the list."}
 
 
