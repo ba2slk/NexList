@@ -203,9 +203,23 @@
     .completed .due-default {
       color: inherit;
     }
+    
+    .cyber-campus-anchor {
+      position: fixed;
+      right: 20px;
+      bottom: 40px;
+      background-color: #ffffff;
+      color: white;
+      padding: 10px 15px;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
 
-
-
+    .cyber-campus-anchor:hover {
+      background-color: #f0e9e9;
+    }
   </style>
   <script>
     // FastAPI 서버에서 주입해주는 API_URL
@@ -232,5 +246,8 @@
       <input type="date" id="todo-date" style="display: none;" />
     </div>
   </div>
+  <a href="https://cyber.sogang.ac.kr/ilos/main/main_form.acl" class="cyber-campus-anchor">
+    <img src="{{ url_for('static', path='images/cyber_campus.ico') }}" alt="사이버캠퍼스" style="width:24px; height:24px;" />
+  </a>
 </body>
 </html>
