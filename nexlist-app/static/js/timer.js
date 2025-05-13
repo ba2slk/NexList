@@ -1,9 +1,9 @@
 /* static/js/timer.js */
 let timer          = null;   // setInterval 핸들
-let minutes        = 15;
+let minutes        = 25;
 let seconds        = 0;
 let isPaused       = true;   // 처음엔 멈춤
-let baseMinutes    = 15;     // Clear 시 복원할 분
+let baseMinutes    = 25;     // Clear 시 복원할 분
 let hasStartedOnce = false;  // Start 를 눌러야 true
 
 /* 화면 표기 */
