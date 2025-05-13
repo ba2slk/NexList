@@ -1,0 +1,55 @@
+#pomodoro-wrapper {
+  position: fixed;
+  top: 80px;         
+  left: 80px;        
+  z-index: 1000;
+}
+
+#pomodoro-box{
+  background:#fff;
+  border-radius:15px;
+  box-shadow:0 0 10px rgba(0,0,0,.2);
+  width:300px;         
+  padding:20px 20px 25px;
+  text-align:center;
+  display:flex;     
+  flex-direction:column;
+  align-items:center;
+}
+
+#timer{
+  border-radius:50%;
+  width:200px;height:200px;
+  margin:0 auto 15px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:25px;color:rgb(0, 0, 0);
+  border:8px solid #a1caf0;
+}
+
+/* 버튼 영역 */
+.pomodoro-buttons{
+  margin-top:10px;
+  display:flex;
+  justify-content:space-evenly;
+  gap:12px;
+}
+
+/* 버튼 스타일 - 폭 고정 추가 */
+.pomodoro-buttons button{
+  background:#a1caf0;
+  color:#000;
+  border:none;
+  padding:10px 0;       /* 좌우 패딩 대신 중앙 정렬 */
+  border-radius:5px;
+  cursor:pointer;
+
+  width:90px;          /* ← 원하는 고정 폭 */
+  /* 또는  min-width:110px; max-width:110px; */
+  text-align:center;    /* 글자 가운데 정렬 */
+  box-sizing:border-box;
+}
+
+.pomodoro-buttons button:hover{
+  background:#266094;
+  transition:background-color .3s;
+}

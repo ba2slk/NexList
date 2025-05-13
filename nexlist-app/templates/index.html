@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NexList To-Do</title>
   <link rel="icon" type="image/x-icon" href="{{ request.url_for('static', path='images/favicon.ico') }}">
+  <link rel="stylesheet" href="{{ url_for('static', path='css/timer.css') }}">
+
   <style>
-    /* 파스텔 색상 변수 */
     :root {
       --pastel-blue:   #A5D8FF;
       --pastel-green:  #B2F2BB;
@@ -20,7 +21,6 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #F3F8FB;
       color: #555;
-      /* 하단 입력 영역이 콘텐츠와 겹치지 않도록 여분 패딩 */
       padding-bottom: 180px;
     }
 
@@ -55,10 +55,7 @@
       margin-bottom: 20px;
     }
 
-    ul {
-      list-style: none;
-      padding: 0;
-    }
+    ul { list-style: none; padding: 0; }
     li {
       background: #fff;
       border: 1px solid #e0e0e0;
@@ -68,17 +65,11 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
     }
-    li span {
-      flex: 1;
-      font-size: 16px;
-      color: #555;
-    }
-    .button-group {
-      display: flex;
-      gap: 10px;
-    }
+    li span { flex: 1; font-size: 16px; color: #555; }
+
+    .button-group { display: flex; gap: 10px; }
     .button-group button {
       padding: 8px 12px;
       border: none;
@@ -87,15 +78,10 @@
       cursor: pointer;
       color: #555;
     }
-    .complete-btn {
-      background: var(--pastel-green);
-    }
-    .edit-btn {
-      background: var(--pastel-purple);
-    }
-    .delete-btn {
-      background: var(--pastel-red);
-    }
+    .complete-btn { background: var(--pastel-green); }
+    .edit-btn     { background: var(--pastel-purple); }
+    .delete-btn   { background: var(--pastel-red); }
+
     .delete-all-btn {
       width: 100%;
       padding: 10px;
@@ -107,10 +93,9 @@
       margin-top: 20px;
       cursor: pointer;
       display: none;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
     }
 
-    /* 새 하단 입력창 스타일 */
     #bottom-input {
       position: fixed;
       bottom: 40px;
@@ -118,14 +103,11 @@
       transform: translateX(-50%);
       width: 600px;
       background: #fff;
-      /* 기존 padding 유지 */
-      padding: 10px 10px;
+      padding: 10px;
       border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-      /* height: 40px; 는 제거 -> 내용에 맞춰 높이 자동 */
       box-sizing: border-box;
     }
-    /* 플레이스홀더 (버튼처럼 보임) */
     .input-placeholder {
       font-size: 16px;
       color: #555;
@@ -137,33 +119,19 @@
       line-height: 1.5;
       box-sizing: border-box;
     }
-    .input-placeholder:hover {
-      background: #f0f0f0;
-    }
-    /* 활성화된 입력 영역 */
-    #active-input {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
+    .input-placeholder:hover { background: #f0f0f0; }
+
+    #active-input { display: flex; gap: 10px; align-items: center; }
     #active-input input[type="text"] {
       flex: 1;
       padding: 10px;
       border-radius: 5px;
-      font-size: 16px;  
+      font-size: 16px;
       color: #555;
-      /* 기존 테두리 제거 */
       border: none;
-      outline: none;
-      box-shadow: none;
       background: none;
-      /* placeholder와 동일한 line-height와 box-sizing */
       line-height: 1.5;
       box-sizing: border-box;
-    }
-    #active-input input[type="text"]:focus {
-      outline: none;
-      border-color: var(--pastel-green);
     }
     #active-input input[type="date"] {
       padding: 10px;
@@ -171,13 +139,6 @@
       border-radius: 5px;
       font-size: 16px;
       color: #555;
-    }
-    /* 전역 input[type="text"] 설정 (이미 사용 중이면 중복 제외 가능) */
-    input[type="text"] {
-      border: none;
-      outline: none;
-      box-shadow: none;
-      background: none;
     }
 
     input[type="checkbox"] {
@@ -188,66 +149,60 @@
       accent-color: #B2F2BB;
     }
 
-    .due-today { color: rgb(7, 173, 40); }
+    .due-today   { color: rgb(7, 173, 40); }
     .due-overdue { color: rgb(234, 68, 87); }
     .due-default { color: black; }
 
-
-    .completed {
-      color: gray;
-      text-decoration: line-through;
-    }
-
+    .completed { color: gray; text-decoration: line-through; }
     .completed .due-today,
     .completed .due-overdue,
-    .completed .due-default {
-      color: inherit;
-    }
-    
+    .completed .due-default { color: inherit; }
+
     .cyber-campus-anchor {
       position: fixed;
       right: 20px;
       bottom: 40px;
       background-color: #ffffff;
-      color: white;
       padding: 10px 15px;
       text-decoration: none;
       border-radius: 5px;
-      font-weight: bold;
       box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
-
-    .cyber-campus-anchor:hover {
-      background-color: #f0e9e9;
-    }
+    .cyber-campus-anchor:hover { background-color: #f0e9e9; }
   </style>
+
   <script>
-    // FastAPI 서버에서 주입해주는 API_URL
     window.API_URL = "{{ api_url }}";
   </script>
   <script type="module" src="/static/js/main.js"></script>
 </head>
+
 <body>
   <header>
     <a href="{{ url_for('read_root') }}" class="logo">NexList</a>
   </header>
+
+  {% include "timer.html" %}
+
   <div class="container">
     <h2>할 일 목록💡</h2>
     <ul id="todo-list"></ul>
     <button class="delete-all-btn" onclick="deleteAllTodos()">모두 삭제</button>
   </div>
+
   <div id="bottom-input">
-    <!-- 처음에는 플레이스홀더가 보임 -->
     <div id="placeholder" class="input-placeholder">＋ 할 일을 입력하세요</div>
-    <!-- 클릭하면 활성화되는 입력 영역 (기본 숨김) -->
-    <div id="active-input" style="display: none;">
+    <div id="active-input" style="display:none;">
       <input type="text" id="todo-input" placeholder="작업" />
-      <!-- 텍스트 입력 시 나타나는 달력 (처음엔 숨김) -->
-      <input type="date" id="todo-date" style="display: none;" />
+      <input type="date" id="todo-date" style="display:none;" />
     </div>
   </div>
+
   <a href="https://cyber.sogang.ac.kr/ilos/main/main_form.acl" class="cyber-campus-anchor">
-    <img src="{{ url_for('static', path='images/cyber_campus.ico') }}" alt="사이버캠퍼스" style="width:24px; height:24px;" />
+    <img src="{{ url_for('static', path='images/cyber_campus.ico') }}" alt="사이버캠퍼스" style="width:24px;height:24px;" />
   </a>
+
+  <script src="{{ url_for('static', path='js/timer.js') }}"></script>
+
 </body>
 </html>
