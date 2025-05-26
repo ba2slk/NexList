@@ -9,7 +9,17 @@
         <collectionProp name="Arguments.arguments">
           <elementProp name="BASE_URL" elementType="Argument">
             <stringProp name="Argument.name">BASE_URL</stringProp>
-            <stringProp name="Argument.value">http://localhost:5001</stringProp>
+            <stringProp name="Argument.value">${__P(BASE_URL,http://localhost:5001)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="HOST" elementType="Argument">
+            <stringProp name="Argument.name">HOST</stringProp>
+            <stringProp name="Argument.value">${__P(HOST,localhost)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="PORT" elementType="Argument">
+            <stringProp name="Argument.name">PORT</stringProp>
+            <stringProp name="Argument.value">${__P(PORT,5001)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
         </collectionProp>
@@ -30,13 +40,24 @@
         <stringProp name="ThreadGroup.delay"/>
       </ThreadGroup>
       <hashTree>
+        <!-- HTTP Header Manager for JSON Content-Type -->
+        <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+          <collectionProp name="HeaderManager.headers">
+            <elementProp name="Content-Type" elementType="Header">
+              <stringProp name="Header.name">Content-Type</stringProp>
+              <stringProp name="Header.value">application/json</stringProp>
+            </elementProp>
+          </collectionProp>
+        </HeaderManager>
+        <hashTree/>
+        
         <!-- GET /todo -->
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /todo" enabled="true">
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments"/>
           </elementProp>
-          <stringProp name="HTTPSampler.domain">localhost</stringProp>
-          <stringProp name="HTTPSampler.port">5001</stringProp>
+          <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
+          <stringProp name="HTTPSampler.port">${PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
           <stringProp name="HTTPSampler.path">/todo</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
@@ -48,19 +69,20 @@
           <stringProp name="HTTPSampler.embedded_url_re"/>
         </HTTPSamplerProxy>
         <hashTree/>
+        
         <!-- POST /todo -->
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /todo" enabled="true">
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
               <elementProp name="body" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                <stringProp name="Argument.value">{"task": "Test JMeter Task"}</stringProp>
+                <stringProp name="Argument.value">{"task": "Test JMeter Task ${__time(yyyy-MM-dd HH:mm:ss)}"}</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
             </collectionProp>
           </elementProp>
-          <stringProp name="HTTPSampler.domain">localhost</stringProp>
-          <stringProp name="HTTPSampler.port">5001</stringProp>
+          <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
+          <stringProp name="HTTPSampler.port">${PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
           <stringProp name="HTTPSampler.path">/todo</stringProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
@@ -70,16 +92,17 @@
           <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
           <stringProp name="HTTPSampler.monitor">false</stringProp>
           <stringProp name="HTTPSampler.embedded_url_re"/>
-          <stringProp name="HTTPSampler.contentEncoding">application/json</stringProp>
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
         </HTTPSamplerProxy>
         <hashTree/>
+        
         <!-- GET /todo/1 -->
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /todo/1" enabled="true">
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments"/>
           </elementProp>
-          <stringProp name="HTTPSampler.domain">localhost</stringProp>
-          <stringProp name="HTTPSampler.port">5001</stringProp>
+          <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
+          <stringProp name="HTTPSampler.port">${PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
           <stringProp name="HTTPSampler.path">/todo/1</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
@@ -91,19 +114,20 @@
           <stringProp name="HTTPSampler.embedded_url_re"/>
         </HTTPSamplerProxy>
         <hashTree/>
+        
         <!-- PUT /todo/1 -->
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PUT /todo/1" enabled="true">
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
               <elementProp name="body" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                <stringProp name="Argument.value">{"task": "Updated Task", "due_date": "2025-06-01T00:00:00"}</stringProp>
+                <stringProp name="Argument.value">{"task": "Updated Task ${__time(yyyy-MM-dd HH:mm:ss)}", "due_date": "2025-06-01T00:00:00"}</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
             </collectionProp>
           </elementProp>
-          <stringProp name="HTTPSampler.domain">localhost</stringProp>
-          <stringProp name="HTTPSampler.port">5001</stringProp>
+          <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
+          <stringProp name="HTTPSampler.port">${PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
           <stringProp name="HTTPSampler.path">/todo/1</stringProp>
           <stringProp name="HTTPSampler.method">PUT</stringProp>
@@ -113,9 +137,10 @@
           <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
           <stringProp name="HTTPSampler.monitor">false</stringProp>
           <stringProp name="HTTPSampler.embedded_url_re"/>
-          <stringProp name="HTTPSampler.contentEncoding">application/json</stringProp>
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
         </HTTPSamplerProxy>
         <hashTree/>
+        
         <!-- PUT /todo/1/toggle -->
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PUT /todo/1/toggle" enabled="true">
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
@@ -127,8 +152,8 @@
               </elementProp>
             </collectionProp>
           </elementProp>
-          <stringProp name="HTTPSampler.domain">localhost</stringProp>
-          <stringProp name="HTTPSampler.port">5001</stringProp>
+          <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
+          <stringProp name="HTTPSampler.port">${PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
           <stringProp name="HTTPSampler.path">/todo/1/toggle</stringProp>
           <stringProp name="HTTPSampler.method">PUT</stringProp>
@@ -138,16 +163,17 @@
           <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
           <stringProp name="HTTPSampler.monitor">false</stringProp>
           <stringProp name="HTTPSampler.embedded_url_re"/>
-          <stringProp name="HTTPSampler.contentEncoding">application/json</stringProp>
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
         </HTTPSamplerProxy>
         <hashTree/>
+        
         <!-- DELETE /todo/1 -->
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="DELETE /todo/1" enabled="true">
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments"/>
           </elementProp>
-          <stringProp name="HTTPSampler.domain">localhost</stringProp>
-          <stringProp name="HTTPSampler.port">5001</stringProp>
+          <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
+          <stringProp name="HTTPSampler.port">${PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
           <stringProp name="HTTPSampler.path">/todo/1</stringProp>
           <stringProp name="HTTPSampler.method">DELETE</stringProp>
@@ -159,13 +185,14 @@
           <stringProp name="HTTPSampler.embedded_url_re"/>
         </HTTPSamplerProxy>
         <hashTree/>
-        <!-- DELETE /todo -->
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="DELETE /todo" enabled="true">
+        
+        <!-- DELETE /todo (전체 삭제는 주의해서 사용) -->
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="DELETE /todo" enabled="false">
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments"/>
           </elementProp>
-          <stringProp name="HTTPSampler.domain">localhost</stringProp>
-          <stringProp name="HTTPSampler.port">5001</stringProp>
+          <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
+          <stringProp name="HTTPSampler.port">${PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
           <stringProp name="HTTPSampler.path">/todo</stringProp>
           <stringProp name="HTTPSampler.method">DELETE</stringProp>
@@ -176,6 +203,59 @@
           <stringProp name="HTTPSampler.monitor">false</stringProp>
           <stringProp name="HTTPSampler.embedded_url_re"/>
         </HTTPSamplerProxy>
+        <hashTree/>
+        
+        <!-- Response Assertion to check for successful responses -->
+        <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
+          <collectionProp name="Asserion.test_strings">
+            <stringProp name="49586">200</stringProp>
+            <stringProp name="51121">201</stringProp>
+            <stringProp name="51182">204</stringProp>
+          </collectionProp>
+          <stringProp name="Assertion.custom_message"/>
+          <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+          <boolProp name="Assertion.assume_success">false</boolProp>
+          <intProp name="Assertion.test_type">40</intProp>
+        </ResponseAssertion>
+        <hashTree/>
+        
+        <!-- View Results Tree for debugging -->
+        <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
+          <boolProp name="ResultCollector.error_logging">false</boolProp>
+          <objProp>
+            <name>saveConfig</name>
+            <value class="SampleSaveConfiguration">
+              <time>true</time>
+              <latency>true</latency>
+              <timestamp>true</timestamp>
+              <success>true</success>
+              <label>true</label>
+              <code>true</code>
+              <message>true</message>
+              <threadName>true</threadName>
+              <dataType>true</dataType>
+              <encoding>false</encoding>
+              <assertions>true</assertions>
+              <subresults>true</subresults>
+              <responseData>false</responseData>
+              <samplerData>false</samplerData>
+              <xml>false</xml>
+              <fieldNames>true</fieldNames>
+              <responseHeaders>false</responseHeaders>
+              <requestHeaders>false</requestHeaders>
+              <responseDataOnError>false</responseDataOnError>
+              <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+              <assertionsResultsToSave>0</assertionsResultsToSave>
+              <bytes>true</bytes>
+              <sentBytes>true</sentBytes>
+              <url>true</url>
+              <threadCounts>true</threadCounts>
+              <idleTime>true</idleTime>
+              <connectTime>true</connectTime>
+            </value>
+          </objProp>
+          <stringProp name="filename"></stringProp>
+        </ResultCollector>
         <hashTree/>
       </hashTree>
     </hashTree>
