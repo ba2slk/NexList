@@ -74,24 +74,24 @@ app.add_middleware(
 )
 
 # InfluxDB 클라이언트 설정 (도커 컴포즈에서 influxdb 라는 서비스 이름 쓴 경우)
-influx_client = InfluxDBClient(host="influxdb", port=8086)
-influx_client.switch_database("testdb")
-def log_influx_event(user: str, action: str, todo_id: int = None):
-    json_body = [
-        {
-            "measurement": "todo_events",
-            "tags": {
-                "user": user,
-                "action": action
-            },
-            "time": datetime.utcnow().isoformat(),
-            "fields": {
-                "value": 1,
-                "todo_id": todo_id or 0
-            }
-        }
-    ]
-    influx_client.write_points(json_body)
+# influx_client = InfluxDBClient(host="influxdb", port=8086)
+# influx_client.switch_database("testdb")
+# def log_influx_event(user: str, action: str, todo_id: int = None):
+#     json_body = [
+#         {
+#             "measurement": "todo_events",
+#             "tags": {
+#                 "user": user,
+#                 "action": action
+#             },
+#             "time": datetime.utcnow().isoformat(),
+#             "fields": {
+#                 "value": 1,
+#                 "todo_id": todo_id or 0
+#             }
+#         }
+#     ]
+#     influx_client.write_points(json_body)
 
 
 # Prometheus Metrics Endpoint (/metrics)
@@ -133,7 +133,7 @@ def create_todo(item: TodoItem):
     dao.save_todo_list(todo_list)
 
     # influx log 
-    log_influx_event(user="default_user", action="create", todo_id=idx)
+    # log_influx_event(user="default_user", action="create", todo_id=idx)
 
     return {"message": f"Successfully added <{item_dict['task']}> to the list."}
     
