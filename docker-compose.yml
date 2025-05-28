@@ -5,7 +5,7 @@ services:
     build:
       context: ./nexlist-app      # Dockerfile이 위치한 디렉토리 경로
       dockerfile: Dockerfile      # Dockerfile 이름 (생략 가능, 기본값은 'Dockerfile')
-    container_name: nexlist
+    container_name: nexlist-app
     ports:
       - "5001:5001"
     volumes:
