@@ -158,17 +158,29 @@
     .completed .due-overdue,
     .completed .due-default { color: inherit; }
 
-    .cyber-campus-anchor {
-      position: fixed;
-      right: 20px;
-      bottom: 40px;
-      background-color: #ffffff;
-      padding: 10px 15px;
-      text-decoration: none;
-      border-radius: 5px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    }
-    .cyber-campus-anchor:hover { background-color: #f0e9e9; }
+    .anchor-container {
+    position: fixed;
+    right: 20px;
+    bottom: 40px;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 15px; /* 간격 조정 */
+    z-index: 999;
+  }
+
+  .site-anchor {
+    background-color: #ffffff;
+    padding: 10px 15px;
+    text-decoration: none;
+    border-radius: 5px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+
+  .site-anchor:hover {
+    background-color: #f0e9e9;
+  }
+
+    
   </style>
 
   <script>
@@ -198,9 +210,17 @@
     </div>
   </div>
 
-  <a href="https://cyber.sogang.ac.kr/ilos/main/main_form.acl" class="cyber-campus-anchor">
+  <div class="anchor-container">
+  <a href="https://cyber.sogang.ac.kr/ilos/main/main_form.acl" class="site-anchor" id="cyber-campus">
     <img src="{{ url_for('static', path='images/cyber_campus.ico') }}" alt="사이버캠퍼스" style="width:24px;height:24px;" />
   </a>
+  <a href="https://saint.sogang.ac.kr/irj/portal#none" class="site-anchor" id="saint">
+    <img src="{{ url_for('static', path='images/saint.ico') }}" alt="SAINT" style="width:24px;height:24px;" />
+  </a>
+  <a href="https://www.google.com" class="site-anchor" id="google">
+    <img src="{{ url_for('static', path='images/google.ico') }}" alt="Google" style="width:24px;height:24px;" />
+  </a>
+</div>
 
   <script src="{{ url_for('static', path='js/timer.js') }}"></script>
 
