@@ -8,11 +8,14 @@
   <link rel="stylesheet" href="{{ url_for('static', path='css/timer.css') }}">
 
   <style>
+    /* ===========================
+       기존 스타일(변경 없음)
+       =========================== */
     :root {
       --pastel-blue:   #A5D8FF;
       --pastel-green:  #B2F2BB;
       --pastel-red:    #FFC9C9;
-      --pastel-purple: #D0BFFF;
+      --pastel-purple:#D0BFFF;
     }
 
     body {
@@ -21,7 +24,7 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #F3F8FB;
       color: #555;
-      padding-bottom: 180px;
+      padding-bottom: 180px; /* 맨 아래 입력창 공간 */
     }
 
     header {
@@ -34,6 +37,7 @@
       padding: 10px 20px;
       display: flex;
       align-items: center;
+      z-index: 100;
     }
     .logo {
       font-size: 20px;
@@ -159,28 +163,96 @@
     .completed .due-default { color: inherit; }
 
     .anchor-container {
-    position: fixed;
-    right: 20px;
-    bottom: 40px;
-    display: flex;
-    flex-direction: column-reverse;
-    gap: 15px; /* 간격 조정 */
-    z-index: 999;
-  }
+      position: fixed;
+      right: 20px;
+      bottom: 40px;
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 15px;
+      z-index: 999;
+    }
 
-  .site-anchor {
-    background-color: #ffffff;
-    padding: 10px 15px;
-    text-decoration: none;
-    border-radius: 5px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-  }
+    .site-anchor {
+      background-color: #ffffff;
+      padding: 10px 15px;
+      text-decoration: none;
+      border-radius: 5px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    .site-anchor:hover {
+      background-color: #f0e9e9;
+    }
 
-  .site-anchor:hover {
-    background-color: #f0e9e9;
-  }
+    /* ===========================
+       여기서부터 추가/변경된 부분
+       =========================== */
 
-    
+    /* 1) 세 개의 박스를 가로로 나란히 배치할 flex 컨테이너 */
+    .main-flex-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 40px;
+      /* 상단 헤더(높이 약 50px) + 여유 마진 50px = 100px */
+      margin: 100px auto 0 auto;
+      max-width: 1200px;
+    }
+
+    /* 2) 타이머 오버라이드: timer.html 내부에 position:fixed가 있을 경우 flex 안으로 들어오게 해제 */
+    #pomodoro-wrapper {
+      position: static !important;
+      width: 320px;       /* 타이머 폭과 비슷하게 고정 */
+      margin: 0;          /* flex 아이템 간격은 main-flex-wrapper에서 처리 */
+    }
+
+    /* 3) 할 일 목록 컨테이너는 기존 그대로 두되, flex 자식으로만 위치하게 함 */
+    .container {
+      /* margin:100px auto 0 auto; 이 부분은 flex에서 맨 위 정렬되므로 override */
+      margin: 0;
+      background: #fff; /* 카드처럼 구분이 필요하면 유지, 아니면 background:none으로 변경 가능 */
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      /* width:600px; 그대로 사용 */
+    }
+
+    /* 4) 오른쪽 메모장 박스 추가 */
+    .memo-container {
+      background: #fff;
+      width: 320px;                 /* 타이머와 거의 같은 폭 */
+      height: 640px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    .memo-container h2 {
+      margin: 0 0 10px 0;
+      font-size: 18px;
+      text-align: center;
+      color: #333;
+    }
+    .memo-container textarea {
+      flex: 1;
+      resize: none;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 10px;
+      font-family: inherit;
+      font-size: 14px;
+      color: #555;
+      background: #fdfdfd;
+    }
+    .memo-container button {
+      margin-top: 10px;
+      align-self: flex-end;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 5px;
+      background: var(--pastel-blue);
+      color: #fff;
+      font-size: 14px;
+      cursor: pointer;
+    }
   </style>
 
   <script>
@@ -190,18 +262,34 @@
 </head>
 
 <body>
+  <!-- ========= 상단 헤더 ========= -->
   <header>
     <a href="{{ url_for('read_root') }}" class="logo">NexList</a>
   </header>
 
-  {% include "timer.html" %}
+  <!-- ========= 타이머 + 할일목록 + 메모장을 가로로 묶는 wrapper ========= -->
+  <div class="main-flex-wrapper">
 
-  <div class="container">
-    <h2>할 일 목록💡</h2>
-    <ul id="todo-list"></ul>
-    <button class="delete-all-btn" onclick="deleteAllTodos()">모두 삭제</button>
-  </div>
+    <!-- -- 1) 기존 타이머 include -- -->
+    {% include "timer.html" %}
 
+    <!-- -- 2) 기존 할 일 목록 -- -->
+    <div class="container">
+      <h2>할 일 목록💡</h2>
+      <ul id="todo-list"></ul>
+      <button class="delete-all-btn" onclick="deleteAllTodos()">모두 삭제</button>
+    </div>
+
+    <!-- -- 3) 새로 추가된 메모장 -- -->
+    <div class="memo-container">
+      <h2>메모장</h2>
+      <!-- 3-1) 자유롭게 작성 가능한 textarea -->
+      <textarea id="memo-text" placeholder="여기에 메모를 입력하세요..."></textarea>
+    </div>
+
+  </div> <!-- /.main-flex-wrapper -->
+
+  <!-- ========= 기존 하단 입력창 ========= -->
   <div id="bottom-input">
     <div id="placeholder" class="input-placeholder">＋ 할 일을 입력하세요</div>
     <div id="active-input" style="display:none;">
@@ -210,19 +298,20 @@
     </div>
   </div>
 
+  <!-- ========= 우측 하단 사이트 바로가기 ========= -->
   <div class="anchor-container">
-  <a href="https://cyber.sogang.ac.kr/ilos/main/main_form.acl" class="site-anchor" id="cyber-campus">
-    <img src="{{ url_for('static', path='images/cyber_campus.ico') }}" alt="사이버캠퍼스" style="width:24px;height:24px;" />
-  </a>
-  <a href="https://saint.sogang.ac.kr/irj/portal#none" class="site-anchor" id="saint">
-    <img src="{{ url_for('static', path='images/saint.ico') }}" alt="SAINT" style="width:24px;height:24px;" />
-  </a>
-  <a href="https://www.google.com" class="site-anchor" id="google">
-    <img src="{{ url_for('static', path='images/google.ico') }}" alt="Google" style="width:24px;height:24px;" />
-  </a>
-</div>
+    <a href="https://cyber.sogang.ac.kr/ilos/main/main_form.acl" class="site-anchor" id="cyber-campus">
+      <img src="{{ url_for('static', path='images/cyber_campus.ico') }}" alt="사이버캠퍼스" style="width:24px;height:24px;" />
+    </a>
+    <a href="https://saint.sogang.ac.kr/irj/portal#none" class="site-anchor" id="saint">
+      <img src="{{ url_for('static', path='images/saint.ico') }}" alt="SAINT" style="width:24px;height:24px;" />
+    </a>
+    <a href="https://www.google.com" class="site-anchor" id="google">
+      <img src="{{ url_for('static', path='images/google.ico') }}" alt="Google" style="width:24px;height:24px;" />
+    </a>
+  </div>
 
+  <!-- ========= 외부 JS ========= -->
   <script src="{{ url_for('static', path='js/timer.js') }}"></script>
-
 </body>
 </html>
