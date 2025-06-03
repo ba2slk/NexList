@@ -113,7 +113,7 @@ loki_logs_handler = LokiQueueHandler(
 )
 
 print("DEBUG: LOKI_ENDPOINT =", os.getenv("LOKI_ENDPOINT"))
-print("DEBUG: loki_logs_handler.url =", loki_logs_handler.url)
+# print("DEBUG: loki_logs_handler.url =", loki_logs_handler.url)
 
 
 
