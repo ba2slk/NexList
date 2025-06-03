@@ -139,7 +139,7 @@ async def log_requests(request: Request, call_next):
 
     return response
 
-app.middleware("http")(log_requests)
+# app.middleware("http")(log_requests)
 
 
 
