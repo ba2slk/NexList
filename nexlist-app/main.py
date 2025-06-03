@@ -108,7 +108,7 @@ Instrumentator().instrument(app).expose(app, endpoint="/metrics")
 loki_logs_handler = LokiQueueHandler(
     Queue(-1),
     url=getenv("LOKI_ENDPOINT"),
-    tags={"application": "fastapi"},
+    tags={"application": "nexlist"},
     version="1",
 )
 
@@ -133,6 +133,9 @@ async def log_requests(request: Request, call_next):
         custom_logger.info(log_message)
 
     return response
+
+app.middleware("http")(log_requests)
+
 
 
 # Template
