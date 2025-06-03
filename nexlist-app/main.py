@@ -112,6 +112,9 @@ loki_logs_handler = LokiQueueHandler(
     version="1",
 )
 
+print("DEBUG: LOKI_ENDPOINT =", os.getenv("LOKI_ENDPOINT"))
+print("DEBUG: loki_logs_handler.url =", loki_logs_handler.url)
+
 
 
 # Custom access logger (ignore Uvicorn's default logging)
