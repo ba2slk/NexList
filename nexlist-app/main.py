@@ -134,8 +134,8 @@ async def log_requests(request: Request, call_next):
     )
 
     # **Only log if duration exists**
-    # if duration:
-    custom_logger.info(log_message)
+    if duration:
+        custom_logger.info(log_message)
 
     return response
 
