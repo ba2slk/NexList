@@ -1,12 +1,15 @@
-import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
 import pytest
 from fastapi.testclient import TestClient
-import main
+
+import app.src.todos.router as main
 
 client = TestClient(main.app)
+
 
 @pytest.fixture(autouse=True)
 def setup_test_env(monkeypatch):
@@ -21,11 +24,15 @@ def setup_test_env(monkeypatch):
     main.todo_list.clear()
     monkeypatch.setattr(main, "idx", 0)
 
+
 def test_create_todo():
-    response = client.post("/todo", json={"task": "Test Task", "due_date": "2025-12-31"})
+    response = client.post(
+        "/todo", json={"task": "Test Task", "due_date": "2025-12-31"}
+    )
     assert response.status_code == 201
     data = response.json()
     assert "Successfully added" in data["message"]
+
 
 def test_read_todo_list():
     # 두 개의 할 일을 생성
@@ -37,6 +44,7 @@ def test_read_todo_list():
     assert isinstance(todos, list)
     assert len(todos) == 2
 
+
 def test_read_single_todo():
     client.post("/todo", json={"task": "Single Task", "due_date": "2025-12-31"})
     response = client.get("/todo/1")
@@ -44,9 +52,12 @@ def test_read_single_todo():
     todo = response.json()
     assert todo["task"] == "Single Task"
 
+
 def test_edit_todo():
     client.post("/todo", json={"task": "Old Task", "due_date": "2025-12-31"})
-    response = client.put("/todo/1", json={"task": "New Task", "due_date": "2026-01-01"})
+    response = client.put(
+        "/todo/1", json={"task": "New Task", "due_date": "2026-01-01"}
+    )
     assert response.status_code == 200
     data = response.json()
     assert "updated successfully" in data["message"]
@@ -56,12 +67,14 @@ def test_edit_todo():
     assert todo["task"] == "New Task"
     assert todo["due_date"] == "2026-01-01"
 
+
 def test_toggle_todo_completed():
     client.post("/todo", json={"task": "Toggle Task", "due_date": "2025-12-31"})
     response = client.put("/todo/1/toggle", json={"completed": True})
     assert response.status_code == 200
     data = response.json()
     assert data["completed"] is True
+
 
 def test_delete_single_todo():
     client.post("/todo", json={"task": "Task to Delete", "due_date": "2025-12-31"})
@@ -72,6 +85,7 @@ def test_delete_single_todo():
     assert response.status_code == 200
     todos = response.json()
     assert len(todos) == 0
+
 
 def test_delete_all_todos():
     client.post("/todo", json={"task": "Task 1", "due_date": "2025-12-31"})
