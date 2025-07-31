@@ -1,7 +1,10 @@
+import os
 from database import Base, engine
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from todos.models import Todo
 from todos.router import router as todos_router
 
@@ -23,3 +26,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # 이 파일이 위치한 절대 경로 상의 디렉토리 명
+templates = Jinja2Templates(directory="templates")  # templates 폴더명 지정
+
+@app.get("/main", response_class=HTMLResponse)
+def read_root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})

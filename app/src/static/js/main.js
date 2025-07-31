@@ -1,4 +1,4 @@
-const API_URL = window.API_URL || "http://127.0.0.1:8000/todo";
+const API_URL = window.API_URL || "http://127.0.0.1:8000/todos";
 
 // 할 일 목록 불러오기
 async function loadTodos() {
@@ -15,7 +15,7 @@ async function loadTodos() {
         if (todo.due_date) {
             const due = new Date(todo.due_date);
             const now = new Date();
-            if (due < now && !todo.completed) {
+            if (due < now && !todo.is_done) {
                 isOverdue = true;
             }
         }
@@ -42,8 +42,8 @@ async function loadTodos() {
         }
 
         item.innerHTML = `
-            <input type="checkbox" id="check-${todo.id}" ${todo.completed ? "checked" : ""} onchange="toggleComplete(${todo.id})">
-            <span id="text-${todo.id}" class="${todo.completed ? 'completed': ''}">
+            <input type="checkbox" id="check-${todo.id}" ${todo.is_done ? "checked" : ""} onchange="toggleComplete(${todo.id})">
+            <span id="text-${todo.id}" class="${todo.isdone ? 'completed': ''}">
                 ${todo.task} ${dueDateStr}
             </span>
             <input type="text" id="edit-task-${todo.id}" value="${todo.task}" style="display:none;">
@@ -74,10 +74,13 @@ async function addTodo() {
     }
 
     if (!dueDate) {
-        dueDate = new Date().toISOString();
+        dueDate = new Date().toISOString().split("T")[0];
     }
 
-    const payload = { task, due_date: dueDate, completed: false };
+    const payload = { 
+        "task": task,
+        "due_date": dueDate
+    };
 
     await fetch(API_URL, {
         method: "POST",
@@ -98,11 +101,11 @@ async function addTodo() {
 async function toggleComplete(id) {
     const response = await fetch(`${API_URL}/${id}`);
     const todo = await response.json();
-    const updatedCompleted = !todo.completed;
+    const updatedCompleted = !todo.is_done;
     await fetch(`${API_URL}/${id}/toggle`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ completed: updatedCompleted })
+        body: JSON.stringify({ "is_done": updatedCompleted })
     });
     loadTodos();
 }

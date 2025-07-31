@@ -24,6 +24,7 @@ def create_todo(todo: TodoItem, db: Session) -> Todo:
     db.add(new_todo)
     new_todo.task = todo.task
     new_todo.due_date = todo.due_date
+    new_todo.is_done = False
     db.commit()
     db.refresh(new_todo)
     return new_todo

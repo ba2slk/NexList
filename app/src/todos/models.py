@@ -1,6 +1,6 @@
 # 데이터 구조만 정의
 
-from src.database import Base
+from database import Base
 from sqlalchemy import Boolean, Column, Date, Integer, String
 
 
