@@ -1,8 +1,9 @@
-const API_URL = window.API_URL || "http://127.0.0.1:8000/todos";
+const API_URL = window.API_URL || "http://localhost:8000/todos";
+const AUTH_URL = "http://localhost:8000/auth";
 
 // 할 일 목록 불러오기
 async function loadTodos() {
-    const response = await fetch(API_URL);
+    const response = await fetch(API_URL, { credentials: 'include'});
     const todos = await response.json();
     const list = document.getElementById("todo-list");
     list.innerHTML = "";
@@ -160,6 +161,26 @@ async function saveEdit(id) {
     loadTodos();
 }
 
+// Login 상태 정보 가져와서 로그인/로그아웃 버튼 토글
+async function updateLoginStatus() {
+    const loginBtn = document.getElementById("login-btn");
+    const logoutBtn = document.getElementById("logout-btn");
+
+    try {
+        const response = await fetch(`${AUTH_URL}/me`, {credentials: 'include'});
+        if (response.ok) {
+            loginBtn.style.display = "none";
+            logoutBtn.style.display = "block";
+        } else {
+            loginBtn.style.display = "block";
+            logoutBtn.style.display = "none";
+        }
+    } catch (error) {
+        loginBtn.style.display = "block";
+        logoutBtn.style.display = "none";
+    }
+}
+
 // 새 입력 UI 이벤트 처리
 window.addEventListener('DOMContentLoaded', () => {
     const placeholder = document.getElementById("placeholder");
@@ -198,7 +219,32 @@ window.addEventListener('DOMContentLoaded', () => {
             addTodo();
         }
     });
+
+    // 로그인 버튼 이벤트 리스너
+    const loginBtn = document.getElementById("login-btn");
+    loginBtn.addEventListener("click", async () => {
+        window.location.href = `${AUTH_URL}/login/google`;
+    });
+
+    // 로그아웃 버튼 이벤트 리스너
+    const logoutBtn = document.getElementById("logout-btn");
+    logoutBtn.addEventListener("click", async () => {
+        const response = await fetch(`${AUTH_URL}/logout`, { 
+            method: "POST",
+            credentials: "include"
+        });
+        if (response.ok) {
+            location.reload();
+        }
+        else {
+            alert("로그아웃에 실패했습니다.")
+        }
+    });
+
+    updateLoginStatus();
+    loadTodos();
 });
+
 
 window.deleteTodo = deleteTodo;
 window.deleteAllTodos = deleteAllTodos;
