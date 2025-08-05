@@ -3,10 +3,10 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from .constants import TODO_NOT_FOUND_DETAIL
-from .dependencies import get_db
-from .repository import *
-from .schemas import TodoCompletedStateToggle, TodoItem, TodoResponse
+from todos.constants import TODO_NOT_FOUND_DETAIL
+from dependencies import get_db
+from todos.repository import *
+from todos.schemas import TodoCompletedStateToggle, TodoItem, TodoResponse
 
 router = APIRouter(prefix="/todos", tags=["Todos"])
 

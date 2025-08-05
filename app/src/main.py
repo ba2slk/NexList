@@ -8,6 +8,7 @@ from fastapi.templating import Jinja2Templates
 from todos.models import Todo
 from todos.router import router as todos_router
 from auth.router import router as auth_router
+from auth.models import User
 
 # Base.metadata.drop_all(bind=engine)
 Base.metadata.create_all(bind=engine)  # Base에 연결된 모든 Table 생성
@@ -32,6 +33,7 @@ app.add_middleware(
 
 # BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # 이 파일이 위치한 절대 경로 상의 디렉토리 명
 templates = Jinja2Templates(directory="templates")  # templates 폴더명 지정
+
 
 @app.get("/main", response_class=HTMLResponse)
 def read_root(request: Request):
