@@ -241,10 +241,24 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    updateLoginStatus();
+    updateLoginStatus();    
     loadTodos();
 });
 
+document.addEventListener("keydown", (e) => {
+    const placeholder = document.getElementById("placeholder");
+    const activeInputContainer = document.getElementById("active-input");
+    const todoInput = document.getElementById("todo-input");
+
+    // 입력창이 비활성 상태일 때만 실행
+    const isInputVisible = activeInputContainer.style.display !== "none";
+    if (!isInputVisible && e.key === "Enter") {
+        e.preventDefault(); // 기본 스크롤 방지 등
+        placeholder.style.display = "none";
+        activeInputContainer.style.display = "flex";
+        todoInput.focus();
+    }
+});
 
 window.deleteTodo = deleteTodo;
 window.deleteAllTodos = deleteAllTodos;

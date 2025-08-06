@@ -18,3 +18,9 @@ GOOGLE_USER_INFO_ENDPOINT = "https://www.googleapis.com/oauth2/v1/userinfo"
 
 # Details
 TOKEN_OBTAIN_FAILED_DETAIL = "Failed to obtain access token from Google"
+
+
+# JWT
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+JWT_ALGORITHM = os.getenv("JWT_ALGORITHM")
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
