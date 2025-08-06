@@ -1,6 +1,3 @@
 # Nexlist: FastAPI 기반 TO-DO List
-## baseline-v8.0.0 (Latest Version - updated at 25.6.4)
-![image](https://github.com/user-attachments/assets/601a9393-6f3c-453c-8b94-a9f43750764a)
-
----
-현재는 코드 구조를 리팩토링 중입니다. (25.07.31 기준)
+## baseline-v9.0.0 (Latest Version - updated at 25.8.6)
+<img width="2879" height="1799" alt="image" src="https://github.com/user-attachments/assets/a0459d41-1929-4647-b050-6ad6313ca639" />
