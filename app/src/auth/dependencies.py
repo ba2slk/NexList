@@ -11,7 +11,7 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
     token = request.cookies.get("access_token")
 
     if token is None:
-        raise HTTPException(status_code=401, detail="No access token provided")
+        raise HTTPException(status_code=401, detail="Login Required")
 
     try:
         payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])

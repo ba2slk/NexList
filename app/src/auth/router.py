@@ -1,67 +1,38 @@
 import requests
-from fastapi import APIRouter, HTTPException, Request, Response, Depends
+from fastapi import APIRouter, HTTPException, Response, Depends
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from auth.constants import *
 from auth.repository import *
 from auth.jwt_utils import *
+from auth.dependencies import get_current_user
+from auth.google_auth import *
 from dependencies import get_db
 
-""" Todo
-0. 데이터베이스 확장
-- users 테이블 생성
-- todos 테이블에 user_id 외래키 추가
-
-
-1. /google/callback 에서 신규유저 구분
-1-1. 신규 유저라면 DB에 정보 저장
-1-2. 기존 유저라면 access_token만 쿠키에 저장
-
-"""
 
 router = APIRouter(prefix="/auth")
 
 
 @router.get("/login/google")
-async def login_google():
+async def login_google() -> RedirectResponse:
+    """ Google 로그인 화면으로 리디렉션"""
     return RedirectResponse(url=GOOGLE_LOGIN_URL)
 
 
 @router.get("/google/callback")
-async def auth_google(code: str, db: Session = Depends(get_db)):
-    token_url = GOOGLE_TOKEN_URL
-    data = {
-        "code": code,
-        "client_id": GOOGLE_CLIENT_ID,
-        "client_secret": GOOGLE_CLIENT_SECRET,
-        "redirect_uri": GOOGLE_REDIRECT_URI,
-        "grant_type": "authorization_code",
-    }
+async def auth_google(code: str, db: Session = Depends(get_db)) -> RedirectResponse:
+    """ Google로부터 access_token을 받아와서 신규 유저라면 DB에 등록하고 로그인한 사용자에게 jwt 토큰을 반환함.
+    : SRP 위배 -> 책임 분리를 위한 리팩토링 필요
+    """
 
-    # 토큰 요청
-    token_response = requests.post(token_url, data=data)
-    if token_response.status_code != 200:
-        raise HTTPException(status_code=400, detail=TOKEN_OBTAIN_FAILED_DETAIL)
+    access_token = fetch_google_access_token(code)  #Google Access Token 발급
+    
+    google_user_info = fetch_google_user_info(access_token)  #유저 정보 획득
+    user_info = add_user(google_user_info, db) #유저 정보 등록
 
-    access_token = token_response.json().get("access_token")
-
-    # Google로부터 사용자 정보 받아오기
-    headers = {"Authorization": f"Bearer {access_token}"}
-    user_info_response = requests.get(GOOGLE_USER_INFO_ENDPOINT, headers=headers)
-
-    if user_info_response.status_code != 200:
-        response = Response(status_code=401)
-        response.delete_cookie("access_token")
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-
-    raw_json = user_info_response.json()
-    user_info = GoogleUserInfoResponse(**raw_json)
-    user = add_user(user_info, db)
-
-    jwt_token = create_jwt_token({"user_id": user.id})
-
-    # jwt 발급 후 /main 으로 redirection
-    response = RedirectResponse(url="/main")
+    jwt_token = create_jwt_token({"user_id": user_info.id})  #jwt token 생성
+    
+    response = RedirectResponse(url="/main")  #jwt token 발급 및 main/ 리디렉션
     response.set_cookie(
         key="access_token", value=jwt_token, httponly=True, samesite="lax"
     )
@@ -69,26 +40,17 @@ async def auth_google(code: str, db: Session = Depends(get_db)):
     return response
 
 
-# 로그인 정보
 @router.get("/me")
-async def get_me(request: Request, db: Session = Depends(get_db)):
-    # 클라이언트(브라우저)에 캐싱된 access_token을 받아옴.
-    jwt_token = request.cookies.get("access_token")
-
-    # access_token이 없다면 로그인 필요 -> 401 Unauthorized Error
-    if not jwt_token:
-        raise HTTPException(status_code=401, detail="Not logged in")
-
-    # (임시)
-    # user = get_user_by_sub(sub, db)
-    headers = {"Authorization": f"Bearer {jwt_token}"}
-    user_info_response = requests.get(GOOGLE_USER_INFO_ENDPOINT, headers=headers)
-
-    return user_info_response.json()
+async def get_me(user: User = Depends(get_current_user)):
+    """ 로그인 상태 정보 제공 """
+    return user
 
 
 @router.post("/logout")
-async def logout():
+async def logout() -> JSONResponse:
+    """ 유저 로그아웃
+    : jwt_token(access_token)을 쿠키에서 삭제
+    """
     response = JSONResponse(content={"message": "Logged out"})
     response.delete_cookie("access_token")
     return response
