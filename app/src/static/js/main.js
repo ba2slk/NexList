@@ -234,6 +234,7 @@ window.addEventListener('DOMContentLoaded', () => {
             credentials: "include"
         });
         if (response.ok) {
+            alert("로그아웃합니다.")
             location.reload();
         }
         else {
