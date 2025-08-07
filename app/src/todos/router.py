@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from todos.constants import TODO_NOT_FOUND_DETAIL
-from dependencies import get_db
+from db.dependencies import get_db
 from todos.repository import *
 from todos.schemas import TodoCompletedStateToggle, TodoItem, TodoResponse
 from auth.dependencies import get_current_user

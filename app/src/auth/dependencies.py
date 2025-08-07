@@ -1,7 +1,7 @@
 from fastapi import Depends, HTTPException, Request
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
-from dependencies import get_db
+from db.dependencies import get_db
 from auth.models import User
 from auth.constants import JWT_SECRET_KEY, JWT_ALGORITHM
 

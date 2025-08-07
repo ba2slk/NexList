@@ -7,7 +7,7 @@ from auth.repository import *
 from auth.jwt_utils import *
 from auth.dependencies import get_current_user
 from auth.google_auth import *
-from dependencies import get_db
+from db.dependencies import get_db
 
 
 router = APIRouter(prefix="/auth")
