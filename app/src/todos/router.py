@@ -1,96 +1,105 @@
-from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-
-from todos.constants import TODO_NOT_FOUND_DETAIL
-from dependencies import get_db
-from todos.repository import *
-from todos.schemas import TodoCompletedStateToggle, TodoItem, TodoResponse
 from auth.dependencies import get_current_user
 from auth.models import User
+from fastapi import APIRouter, Depends, status
+from todos.dependencies import get_todo_service
+from todos.schemas import TodoCompletedState, TodoItem, TodoResponse
+from todos.service import TodoService
 
 router = APIRouter(prefix="/todos", tags=["Todos"])
 
 
 # 할 일 추가하기
-@router.post("/", response_model=TodoResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=TodoResponse,
+    status_code=status.HTTP_201_CREATED
+)
 def create_todo_item(
     todo: TodoItem,
-    user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    service: TodoService = Depends(get_todo_service),
+    user: User = Depends(get_current_user)
 ):
-    todo_item = create_todo(todo, user.id, db)
-    return todo_item
+    return service.create_todo(todo, user)
 
 
 # 할 일 목록 불러오기
-@router.get("/", response_model=List[TodoResponse])
+@router.get(
+    "/",
+    response_model=list[TodoResponse],
+    status_code=status.HTTP_200_OK
+)
 def read_todo_list(
-    user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    service: TodoService = Depends(get_todo_service),
+    user: User = Depends(get_current_user)
 ):
-    todo_list = get_all_todos(user.id, db)
-    return todo_list
+    return service.get_all_todos(user)
 
 
 # 하나의 todo만 불러오기
-@router.get("/{id}", response_model=TodoResponse)
+@router.get(
+    "/{id}",
+    response_model=TodoResponse,
+    status_code=status.HTTP_200_OK
+)
 def read_todo(
     id: int,
-    user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    service: TodoService = Depends(get_todo_service),
+    user: User = Depends(get_current_user)
 ):
-    todo = get_todo_by_id(id, user.id, db)
-    if not todo:
-        raise HTTPException(status_code=404, detail=TODO_NOT_FOUND_DETAIL)
-    return todo
+    return service.get_todo_by_id(id, user)
 
 
 # 리스트 초기화
-@router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/",
+    status_code=status.HTTP_204_NO_CONTENT
+)
 def delete_todo_list(
-    user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    service: TodoService = Depends(get_todo_service),
+    user: User = Depends(get_current_user)
 ):
-    remove_all_todos(user.id, db)
+    service.remove_all_todos(user)
 
 
 # 단일 아이템 삭제
-@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{id}",
+    status_code=status.HTTP_204_NO_CONTENT
+)
 def delete_todo(
     id: int,
-    user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    service: TodoService = Depends(get_todo_service),
+    user: User = Depends(get_current_user)
 ):
-    deleted = remove_todo_by_id(id, user.id, db)
-    if deleted is None:
-        raise HTTPException(status_code=404, detail=TODO_NOT_FOUND_DETAIL)
+    service.remove_todo_by_id(id, user)
 
 
 # todo 내용 변경하기
-@router.put("/{id}")
+@router.put(
+    "/{id}",
+    response_model=TodoResponse,
+    status_code=status.HTTP_200_OK
+)
 def update_todo(
     id: int,
     todo: TodoItem,
-    user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    service: TodoService = Depends(get_todo_service),
+    user: User = Depends(get_current_user)
 ):
-    updated = update_todo_by_id(id, todo, user.id, db)
-    if updated is None:
-        raise HTTPException(status_code=404, detail=TODO_NOT_FOUND_DETAIL)
-    return updated
+    return service.update_todo_by_id(todo, id, user)
 
 
 # todo 완료 상태 변경하기
-@router.put("/{id}/toggle")
+@router.put(
+    "/{id}/completed",
+    response_model=TodoResponse,
+    status_code=status.HTTP_200_OK
+)
 def update_todo_completed_state(
-    id: int, 
-    update: TodoCompletedStateToggle,
-    user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    id: int,
+    update: TodoCompletedState,
+    service: TodoService = Depends(get_todo_service),
+    user: User = Depends(get_current_user)
 ):
-    updated = update_completed_state_by_id(id, update, user.id, db)
-    if updated is None:
-        raise HTTPException(status_code=404, detail=TODO_NOT_FOUND_DETAIL)
-    return updated
+    return service.update_todo_completed_state_by_id(id, update, user)

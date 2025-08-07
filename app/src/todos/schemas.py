@@ -13,7 +13,7 @@ class TodoItem(BaseModel):
 
 
 # Request
-class TodoCompletedStateToggle(BaseModel):
+class TodoCompletedState(BaseModel):
     is_done: bool
 
 

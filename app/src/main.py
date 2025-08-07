@@ -1,5 +1,5 @@
 import os
-from database import Base, engine
+from db.database import create_tables
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -10,8 +10,9 @@ from todos.router import router as todos_router
 from auth.router import router as auth_router
 from auth.models import User
 
-# Base.metadata.drop_all(bind=engine)
-Base.metadata.create_all(bind=engine)  # Base에 연결된 모든 Table 생성
+
+# Create MySQL Tables
+create_tables()
 
 # FastAPI Configuration
 app = FastAPI(debug=True)
