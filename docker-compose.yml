@@ -1,135 +1,156 @@
-version: "3.7"
-
+version: "3.9"
 services:
-  nexlist-app:
+  nexlist-server:
     build:
-      context: ./nexlist-app      # Dockerfile이 위치한 디렉토리 경로
+      context: ./app     # Dockerfile이 위치한 디렉토리 경로
       dockerfile: Dockerfile      # Dockerfile 이름 (생략 가능, 기본값은 'Dockerfile')
-    container_name: nexlist-app
+    container_name: nexlist-server
+    env_file:
+      - .env
     ports:
       - "5001:5001"
     depends_on:
-      - loki
-    environment:
-      - LOKI_ENDPOINT=http://loki:3100/loki/api/v1/push
-    volumes:
-      - ../env_var/.env:/app/.env
-    networks:
-      - loadtest-net
-
-  sonarqube:
-      image: sonarqube:latest
-      container_name: sonarqube
-      ports:
-        - "9000:9000"
-      environment:
-        - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true  # 메모리 제한 환경에서 유용한 옵션
-      volumes:
-        - sonarqube_conf:/opt/sonarqube/conf
-        - sonarqube_data:/opt/sonarqube/data
-        - sonarqube_logs:/opt/sonarqube/logs
-        - sonarqube_extensions:/opt/sonarqube/extensions
-      networks:
-      - loadtest-net
-
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: prometheus
-    volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-    ports:
-      - "7070:9090"
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--web.listen-address=0.0.0.0:9090"
-    networks:
-      - loadtest-net
-
-
-  grafana:
-    image: grafana/grafana:latest
-    container_name: grafana
-    ports:
-      - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin  # 기본 Grafana 로그인 비밀번호
-    volumes:
-      - grafana-data:/var/lib/grafana
-    networks:
-      - loadtest-net
-
-  node-exporter:
-    image: prom/node-exporter:latest
-    container_name: node-exporter
-    ports:
-      - "7100:9100"
-    networks:
-      - loadtest-net
+      - nexlist-db    # DB 먼저 띄우기
   
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest
-    container_name: cadvisor
-    ports:
-      - "8081:8080"
-    volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:ro
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-    command:
-      - "--prometheus_endpoint=/metrics"
+  nexlist-db:
+    image: mysql:8.0
+    container_name: nexlist-db
     restart: unless-stopped
-    networks:
-      - loadtest-net
-
-  jmeter:
-    build:
-      context: ./jmeter
-      dockerfile: Dockerfile
-    container_name: jmeter
-    volumes:
-      - ./jmeter:/jmeter
-    command:
-      - jmeter
-      - -n
-      - -t
-      - /jmeter/fastapi_test_plan.jmx
-      - -l
-      - /jmeter/results.jtl
-      - -JBASE_URL=http://nexlist-app:5001
-      - -Jjmeter.save.saveservice.output_format=csv
-      - -e
-      - -o
-      - /jmeter/report
-    networks:
-      - loadtest-net
-      
-  influxdb:
-    image: influxdb:1.8
-    container_name: influxdb
+    env_file:
+      - .env
     ports:
-      - "8086:8086"
+      - "3306:3306"
     volumes:
-      - influxdb-data:/var/lib/influxdb
-    networks:
-      - loadtest-net
+      - nexlist-mysql-data:/var/lib/mysql    # 볼륨 마운트 (추후 RDS로 확장)
 
-  loki:
-    image: grafana/loki:latest
-    container_name: loki  
-    ports:
-      - "3100:3100"
-    networks:
-      - loadtest-net
-
-networks:
-  loadtest-net:
-    driver: bridge
-        
 volumes:
-  sonarqube_conf:
-  sonarqube_data:
-  sonarqube_logs:
-  sonarqube_extensions:
-  grafana-data:
-  influxdb-data:
+  nexlist-mysql-data:
+
+
+
+
+
+
+    # depends_on:
+    #   - loki
+    # environment:
+    #   - LOKI_ENDPOINT=http://loki:3100/loki/api/v1/push
+    # networks:
+    #   - loadtest-net
+
+#   sonarqube:
+#       image: sonarqube:latest
+#       container_name: sonarqube
+#       ports:
+#         - "9000:9000"
+#       environment:
+#         - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true  # 메모리 제한 환경에서 유용한 옵션
+#       volumes:
+#         - sonarqube_conf:/opt/sonarqube/conf
+#         - sonarqube_data:/opt/sonarqube/data
+#         - sonarqube_logs:/opt/sonarqube/logs
+#         - sonarqube_extensions:/opt/sonarqube/extensions
+#       networks:
+#       - loadtest-net
+
+#   prometheus:
+#     image: prom/prometheus:latest
+#     container_name: prometheus
+#     volumes:
+#       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+#     ports:
+#       - "7070:9090"
+#     command:
+#       - "--config.file=/etc/prometheus/prometheus.yml"
+#       - "--web.listen-address=0.0.0.0:9090"
+#     networks:
+#       - loadtest-net
+
+
+#   grafana:
+#     image: grafana/grafana:latest
+#     container_name: grafana
+#     ports:
+#       - "3000:3000"
+#     environment:
+#       - GF_SECURITY_ADMIN_PASSWORD=admin  # 기본 Grafana 로그인 비밀번호
+#     volumes:
+#       - grafana-data:/var/lib/grafana
+#     networks:
+#       - loadtest-net
+
+#   node-exporter:
+#     image: prom/node-exporter:latest
+#     container_name: node-exporter
+#     ports:
+#       - "7100:9100"
+#     networks:
+#       - loadtest-net
+  
+#   cadvisor:
+#     image: gcr.io/cadvisor/cadvisor:latest
+#     container_name: cadvisor
+#     ports:
+#       - "8081:8080"
+#     volumes:
+#       - /:/rootfs:ro
+#       - /var/run:/var/run:ro
+#       - /sys:/sys:ro
+#       - /var/lib/docker/:/var/lib/docker:ro
+#     command:
+#       - "--prometheus_endpoint=/metrics"
+#     restart: unless-stopped
+#     networks:
+#       - loadtest-net
+
+#   jmeter:
+#     build:
+#       context: ./jmeter
+#       dockerfile: Dockerfile
+#     container_name: jmeter
+#     volumes:
+#       - ./jmeter:/jmeter
+#     command:
+#       - jmeter
+#       - -n
+#       - -t
+#       - /jmeter/fastapi_test_plan.jmx
+#       - -l
+#       - /jmeter/results.jtl
+#       - -JBASE_URL=http://nexlist-app:5001
+#       - -Jjmeter.save.saveservice.output_format=csv
+#       - -e
+#       - -o
+#       - /jmeter/report
+#     networks:
+#       - loadtest-net
+      
+#   influxdb:
+#     image: influxdb:1.8
+#     container_name: influxdb
+#     ports:
+#       - "8086:8086"
+#     volumes:
+#       - influxdb-data:/var/lib/influxdb
+#     networks:
+#       - loadtest-net
+
+#   loki:
+#     image: grafana/loki:latest
+#     container_name: loki  
+#     ports:
+#       - "3100:3100"
+#     networks:
+#       - loadtest-net
+
+# networks:
+#   loadtest-net:
+#     driver: bridge
+        
+# volumes:
+#   sonarqube_conf:
+#   sonarqube_data:
+#   sonarqube_logs:
+#   sonarqube_extensions:
+#   grafana-data:
+#   influxdb-data:
