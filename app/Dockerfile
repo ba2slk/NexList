@@ -15,6 +15,6 @@ COPY . .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # FastAPI 서버 실행: CMD는 도커 파일에서 한 번만 사용할 수 있음.
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5001"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "5001"]
 
 # 현재 환경 변수는 .env를 사용하므로 docker-compose.yml에서 제어
