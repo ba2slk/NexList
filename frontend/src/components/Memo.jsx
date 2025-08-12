@@ -21,15 +21,15 @@ function Memo() {
   return (
     <Card>
       <CardContent>
-        <Typography variant="h5" align="center">Memo</Typography>
+        <Typography variant="h6" align="center">Memo</Typography>
         <TextField
           multiline
-          rows={15} // Increased rows for taller memo
+          rows={6} // Increased rows for taller memo
           fullWidth
           variant="outlined"
           value={memo}
           onChange={(e) => setMemo(e.target.value)}
-          sx={{ mb: 2 }} // Add margin bottom for the button
+          sx={{ mb: 1 }} // Add margin bottom for the button
         />
         <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
           <Button variant="contained" color="primary" onClick={handleSave}>

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { List, ListItem, ListItemText, IconButton, Checkbox, TextField, Box } from '@mui/material';
+import React, { useState, useRef } from 'react';
+import { List, ListItem, ListItemText, IconButton, Checkbox, TextField, Box, Typography } from '@mui/material';
 import { Delete, Save } from '@mui/icons-material'; // Removed Edit icon
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -12,6 +13,8 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
   const [editingDueDateTodoId, setEditingDueDateTodoId] = useState(null); // New state for due date editing
   const [editedTask, setEditedTask] = useState('');
   const [editedDueDate, setEditedDueDate] = useState(null);
+  const [openDatePickerId, setOpenDatePickerId] = useState(null); // State to control which date picker is open
+  const datePickerAnchorRefs = useRef({}); // Ref to store refs for each date picker icon
 
   const handleDelete = async (id) => {
     await deleteTodo(id);
@@ -24,9 +27,7 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
     onTodoToggled(id);
   };
 
-  // Removed handleEditClick
-
-  const handleSaveClick = async (id, field) => {
+  const handleSaveClick = async (id, field, newDueDateValue = undefined) => {
     const todoToUpdate = todos.find((todo) => todo.id === id);
     let updatedData = {};
 
@@ -35,13 +36,16 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
       setEditingTaskTodoId(null);
       setEditedTask('');
     } else if (field === 'due_date') {
-      updatedData = { task: todoToUpdate.task, due_date: editedDueDate ? dayjs(editedDueDate).format('YYYY-MM-DD') : null }; // Keep existing task
+      // Use newDueDateValue if provided, otherwise fall back to editedDueDate
+      const finalDueDate = newDueDateValue !== undefined ? newDueDateValue : editedDueDate;
+      updatedData = { task: todoToUpdate.task, due_date: finalDueDate ? dayjs(finalDueDate).format('YYYY-MM-DD') : null }; // Keep existing task
       setEditingDueDateTodoId(null);
       setEditedDueDate(null);
+      setOpenDatePickerId(null); // Close date picker after saving
     }
 
     await updateTodo(id, updatedData);
-    onTodoUpdated(id, updatedData.task, updatedData.due_date);
+    onTodoUpdated(id, updatedData.task, updatedData.date_due); // Ensure correct prop name for date_due
   };
 
   const handleKeyDown = (event, id, field) => {
@@ -92,9 +96,15 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
             key={todo.id || index}
             secondaryAction={
               <>
-                {/* Save button only appears if either task or due date is being edited */}
-                {(editingTaskTodoId === todo.id || editingDueDateTodoId === todo.id) && (
-                  <IconButton edge="end" aria-label="save" onClick={() => handleSaveClick(todo.id, editingTaskTodoId === todo.id ? 'task' : 'due_date')}>
+                {/* Save button for task editing */}
+                {editingTaskTodoId === todo.id && (
+                  <IconButton edge="end" aria-label="save-task" onClick={() => handleSaveClick(todo.id, 'task')}>
+                    <Save />
+                  </IconButton>
+                )}
+                {/* Save button for due date editing */}
+                {editingDueDateTodoId === todo.id && (
+                  <IconButton edge="end" aria-label="save-due-date" onClick={() => handleSaveClick(todo.id, 'due_date')}>
                     <Save />
                   </IconButton>
                 )}
@@ -121,45 +131,70 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
                   primary={todo.task}
                   style={{ textDecoration: todo.is_done ? 'line-through' : 'none' }}
                   sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}
-                  onClick={() => { // Enable editing on click
+                  onClick={() => {
                     setEditingTaskTodoId(todo.id);
                     setEditedTask(todo.task);
                   }}
                 />
               )}
-              {/* Conditional rendering for Due Date */}
-              {editingDueDateTodoId === todo.id ? ( // If due date is being edited
+              {/* Due Date Display and Picker */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                   <DatePicker
-                    label="Due Date"
+                    open={openDatePickerId === todo.id}
+                    onOpen={() => setOpenDatePickerId(todo.id)}
+                    onClose={() => setOpenDatePickerId(null)}
                     value={editedDueDate}
                     onChange={(newValue) => {
                       setEditedDueDate(newValue);
+                      // Automatically save when a date is selected from the picker
                       if (newValue && newValue.isValid()) {
-                        handleSaveClick(todo.id, 'due_date');
+                        handleSaveClick(todo.id, 'due_date', newValue); // Pass newValue directly
+                      } else if (newValue === null) { // Handle clearing the date
+                        handleSaveClick(todo.id, 'due_date', null); // Pass null directly for clearing
                       }
                     }}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        fullWidth
-                        variant="standard"
-                        onBlur={() => handleSaveClick(todo.id, 'due_date')}
-                        autoFocus
-                      />
-                    )}
+                    slotProps={{
+                      textField: {
+                        inputProps: { readOnly: true },
+                        sx: { display: 'none' }, // Hide the text field
+                      },
+                    }}
+                    PopperProps={{
+                      anchorEl: () => datePickerAnchorRefs.current[todo.id],
+                      placement: 'bottom-end',
+                      modifiers: [
+                        { name: 'offset', options: { offset: [0, 10] } }, // 10px offset
+                        { name: 'flip', options: { fallbackPlacements: ['top-end'] } },
+                        { name: 'preventOverflow', options: { boundary: 'viewport', padding: 8 } },
+                      ],
+                      disablePortal: false,
+                      container: document.body,
+                    }} // Anchor the popover to the icon
                   />
+                  <IconButton
+                    ref={el => datePickerAnchorRefs.current[todo.id] = el} // Assign ref dynamically
+                    onClick={() => {
+                      setEditingDueDateTodoId(todo.id); // Set editing mode for due date
+                      setEditedDueDate(todo.due_date && dayjs(todo.due_date).isValid() ? dayjs(todo.due_date) : null);
+                      setOpenDatePickerId(todo.id); // Open the date picker
+                    }}
+                    aria-label="Select due date"
+                    sx={{ p: '8px' }} // Consistent padding
+                  >
+                    <CalendarTodayIcon />
+                  </IconButton>
+                  <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap', cursor: 'pointer' }}
+                    onClick={() => {
+                      setEditingDueDateTodoId(todo.id); // Set editing mode for due date
+                      setEditedDueDate(todo.due_date && dayjs(todo.due_date).isValid() ? dayjs(todo.due_date) : null);
+                      setOpenDatePickerId(todo.id); // Open the date picker
+                    }}
+                  >
+                    {todo.due_date && dayjs(todo.due_date).isValid() ? `Due: ${dayjs(todo.due_date).format('YYYY-MM-DD')}` : "Add Due Date"}
+                  </Typography>
                 </LocalizationProvider>
-              ) : ( // If due date is not being edited
-                <ListItemText
-                  secondary={todo.due_date && dayjs(todo.due_date).isValid() ? `Due: ${dayjs(todo.due_date).format('YYYY-MM-DD')}` : "Add Due Date"}
-                  onClick={() => {
-                    setEditingDueDateTodoId(todo.id);
-                    setEditedDueDate(todo.due_date && dayjs(todo.due_date).isValid() ? dayjs(todo.due_date) : null);
-                  }}
-                  sx={{ cursor: 'pointer' }} // Indicate clickable
-                />
-              )}
+              </Box>
             </Box>
           </ListItem>
         ))}

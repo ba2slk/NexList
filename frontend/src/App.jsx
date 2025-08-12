@@ -11,10 +11,10 @@ import IconButton from '@mui/material/IconButton';
 import Brightness4Icon from '@mui/icons-material/Brightness4'; // Moon icon for dark mode
 import Brightness7Icon from '@mui/icons-material/Brightness7'; // Sun icon for light mode
 
-// Removed Box, TodoForm imports
 import Pomodoro from './components/Pomodoro';
 import Memo from './components/Memo';
 import TodoSection from './components/TodoSection';
+import TodoForm from './components/TodoForm'; // Uncommented TodoForm import
 import { login, logout, getLoginStatus, getTodos } from './api';
 import { getAppTheme } from './theme';
 
@@ -23,6 +23,7 @@ function App() {
   const [todos, setTodos] = useState([]);
   const [mode, setMode] = useState('light'); // State for theme mode
   const appBarRef = useRef(null);
+  const todoInputRef = useRef(null); // Ref for the todo input
 
   const theme = useMemo(() => getAppTheme(mode), [mode]);
 
@@ -42,6 +43,27 @@ function App() {
 
     checkAndFetchTodos();
   }, [isLoggedIn]);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Enter' && isLoggedIn) {
+        // Check if the currently focused element is not already an input field
+        const activeElement = document.activeElement;
+        const isInputFocused = activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA';
+
+        if (!isInputFocused && todoInputRef.current) {
+          event.preventDefault(); // Prevent default Enter key behavior (e.g., form submission if not intended)
+          todoInputRef.current.focusTodoInput();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isLoggedIn]); // Re-run effect if login status changes
 
   const handleLogin = () => {
     login();
@@ -100,11 +122,18 @@ function App() {
       </AppBar>
       <Container maxWidth="lg" sx={{ mt: 4, height: 'calc(100vh - 64px - 32px)' }}> {/* Set height for Container */}
         {isLoggedIn ? (
-          <Grid container spacing={3} justifyContent="center" sx={{ height: '100%' }}> {/* Ensure Grid takes full height */}
-            <Grid item xs={12} sm={6} md={4}>
-              <Pomodoro />
+          <Grid container spacing={3} sx={{ height: '100%' }}> {/* Ensure Grid takes full height */}
+            {/* Left Column: Pomodoro and Memo */}
+            <Grid item xs={12} sm={6} md={4} container direction="column" spacing={3}>
+              <Grid item>
+                <Pomodoro />
+              </Grid>
+              <Grid item sx={{ flexGrow: 1 }}>
+                <Memo />
+              </Grid>
             </Grid>
-            <Grid item xs={12} sm={6} md={4}>
+            {/* Right Column: TodoSection */}
+            <Grid item xs={12} sm={6} md={8}>
               <TodoSection
                 todos={todos}
                 onTodoDeleted={handleTodoDeleted}
@@ -112,10 +141,8 @@ function App() {
                 onTodoUpdated={handleTodoUpdated}
                 onTodoCreated={handleTodoCreated}
                 appBarRef={appBarRef}
+                todoInputRef={todoInputRef} // Pass the ref down
               />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <Memo />
             </Grid>
           </Grid>
         ) : (

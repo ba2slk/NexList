@@ -3,7 +3,7 @@ import { Grid, Box } from '@mui/material';
 import TodoList from './TodoList';
 import TodoForm from './TodoForm';
 
-function TodoSection({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, onTodoCreated, appBarRef }) {
+function TodoSection({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, onTodoCreated, appBarRef, todoInputRef }) {
   const todoFormRef = useRef(null);
   const todoListWrapperRef = useRef(null); // Ref for the TodoList's parent Box
   const [todoListMaxHeight, setTodoListMaxHeight] = useState(400); // Initial value
@@ -72,7 +72,7 @@ function TodoSection({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, onTod
           // Glassmorphism styles are handled by theme.js
         }}
       >
-        <TodoForm onTodoCreated={onTodoCreated} />
+        <TodoForm onTodoCreated={onTodoCreated} ref={todoInputRef} />
       </Box>
     </Grid>
   );
