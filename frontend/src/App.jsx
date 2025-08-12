@@ -60,6 +60,14 @@ function App() {
     );
   };
 
+  const handleTodoUpdated = (id, updatedTask, updatedDueDate) => {
+    setTodos(
+      todos.map((todo) =>
+        todo.id === id ? { ...todo, task: updatedTask, due_date: updatedDueDate } : todo
+      )
+    );
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -83,7 +91,12 @@ function App() {
             </Grid>
             <Grid xs={12} md={4}>
               <TodoForm onTodoCreated={handleTodoCreated} />
-              <TodoList todos={todos} onTodoDeleted={handleTodoDeleted} onTodoToggled={handleTodoToggled} />
+              <TodoList
+                todos={todos}
+                onTodoDeleted={handleTodoDeleted}
+                onTodoToggled={handleTodoToggled}
+                onTodoUpdated={handleTodoUpdated}
+              />
             </Grid>
             <Grid xs={12} md={4}>
               <Memo />
