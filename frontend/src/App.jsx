@@ -75,7 +75,7 @@ function App() {
   };
 
   const handleTodoCreated = (newTodo) => {
-    setTodos([...todos, newTodo]);
+    setTodos([...todos, { ...newTodo, isNew: true }]);
   };
 
   const handleTodoDeleted = (id) => {

@@ -11,19 +11,21 @@ const TodoForm = forwardRef(({ onTodoCreated }, ref) => {
   const [task, setTask] = useState('');
   const [dueDate, setDueDate] = useState(null);
   const [openDatePicker, setOpenDatePicker] = useState(false);
-  const inputRef = useRef(null); // Ref for the TextField
-  const datePickerAnchorRef = useRef(null); // Ref for the DatePicker anchor
+
+  const inputRef = useRef(null);
+  const datePickerAnchorRef = useRef(null); // IconButton anchor
 
   useImperativeHandle(ref, () => ({
-    focusTodoInput: () => {
-      inputRef.current.focus();
-    }
+    focusTodoInput: () => inputRef.current?.focus()
   }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!task.trim()) return;
-    const newTodo = await createTodo({ task, due_date: dueDate && dueDate.isValid() ? dueDate.format('YYYY-MM-DD') : null });
+    const newTodo = await createTodo({
+      task,
+      due_date: dueDate && dueDate.isValid() ? dueDate.format('YYYY-MM-DD') : null
+    });
     onTodoCreated(newTodo);
     setTask('');
     setDueDate(null);
@@ -37,55 +39,71 @@ const TodoForm = forwardRef(({ onTodoCreated }, ref) => {
         display: 'flex',
         gap: 1,
         mb: 2,
-        flexDirection: 'row', // Changed to row
-        alignItems: 'center', // Align items vertically in the row
-        maxWidth: 520, // Scaled up by 1.3 times
+        flexDirection: 'row',
+        alignItems: 'center',
+        maxWidth: 520,
         mx: 'auto',
         p: 2,
         borderRadius: 2,
         boxShadow: 3,
-        bgcolor: 'background.paper', // Use theme background color
+        bgcolor: 'background.paper',
+        overflowX: 'hidden', // 안전 차단
       }}
     >
       <TextField
-        inputRef={inputRef} // Apply the ref here
+        inputRef={inputRef}
         fullWidth
-        sx={{ flexGrow: 1 }} // Allow it to grow
+        sx={{ flexGrow: 1 }}
         variant="outlined"
         label="Add a new todo"
         value={task}
         onChange={(e) => setTask(e.target.value)}
       />
+
       <LocalizationProvider dateAdapter={AdapterDayjs}>
         <DatePicker
           open={openDatePicker}
           onOpen={() => setOpenDatePicker(true)}
           onClose={() => setOpenDatePicker(false)}
           value={dueDate}
-          onChange={(newValue) => {
-            setDueDate(newValue);
-            // Call submit/update handler with ISO format if valid
-            if (newValue && newValue.isValid()) {
-              // This part is handled by the form submission, no direct save here
-            }
-          }}
+          onChange={(newValue) => setDueDate(newValue)}
+          // hide the internal text field (icon-only trigger)
           slotProps={{
             textField: {
               inputProps: { readOnly: true },
-              sx: { display: 'none' }, // Hide the text field
+              sx: { display: 'none' },
+            },
+            // popper anchored to the icon; open ABOVE it (top-end)
+            popper: {
+              anchorEl: () => datePickerAnchorRef.current,
+              placement: 'top-end',
+              modifiers: [
+                { name: 'offset', options: { offset: [0, 10] } }, // 10px gap
+                { name: 'flip', options: { fallbackPlacements: ['bottom-end'] } },
+                { name: 'preventOverflow', options: { boundary: 'viewport', padding: 8 } },
+              ],
+              disablePortal: false, // render to body (clipping 방지)
             },
           }}
-          PopperProps={{ anchorEl: datePickerAnchorRef.current }} // Anchor the popover to the icon
         />
+
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <IconButton ref={datePickerAnchorRef} onClick={() => setOpenDatePicker(true)} aria-label="Select due date" sx={{ p: '8px' }}>
+          <IconButton
+            ref={datePickerAnchorRef}
+            onClick={() => setOpenDatePicker(true)}
+            aria-label="Select due date"
+            sx={{ p: '8px' }}
+          >
             <CalendarTodayIcon />
           </IconButton>
           <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
-            {dueDate && dayjs(dueDate).isValid() ? dayjs(dueDate).format('YYYY-MM-DD') : 'No Due Date'}
+            {dueDate && dayjs(dueDate).isValid()
+              ? dayjs(dueDate).format('YYYY-MM-DD')
+              : 'No Due Date'}
           </Typography>
         </Box>
       </LocalizationProvider>
+
       <Button type="submit" variant="contained">Add</Button>
     </Box>
   );
