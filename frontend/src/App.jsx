@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import AppBar from '@mui/material/AppBar';
@@ -7,33 +7,34 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
-import TodoList from './components/TodoList';
-import TodoForm from './components/TodoForm';
+// Removed Box, TodoForm imports
 import Pomodoro from './components/Pomodoro';
 import Memo from './components/Memo';
+import TodoSection from './components/TodoSection';
 import { login, logout, getLoginStatus, getTodos } from './api';
 import theme from './theme';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [todos, setTodos] = useState([]);
+  const appBarRef = useRef(null);
 
   useEffect(() => {
     const checkAndFetchTodos = async () => {
       const status = await getLoginStatus();
-      console.log("Login Status:", status); // Log login status
+      console.log("Login Status:", status);
       setIsLoggedIn(status);
       if (status) {
         const fetchedTodos = await getTodos();
-        console.log("Fetched Todos:", fetchedTodos); // Log fetched todos
+        console.log("Fetched Todos:", fetchedTodos);
         setTodos(fetchedTodos);
       } else {
-        setTodos([]); // Clear todos if logged out
+        setTodos([]);
       }
     };
 
     checkAndFetchTodos();
-  }, [isLoggedIn]); // Add isLoggedIn to the dependency array
+  }, [isLoggedIn]);
 
   const handleLogin = () => {
     login();
@@ -71,7 +72,7 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <AppBar position="static">
+      <AppBar position="static" ref={appBarRef}>
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             NexList
@@ -83,22 +84,21 @@ function App() {
           )}
         </Toolbar>
       </AppBar>
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <Container maxWidth="lg" sx={{ mt: 4, height: 'calc(100vh - 64px - 32px)' }}> {/* Set height for Container */}
         {isLoggedIn ? (
-          <Grid container spacing={3}>
-            <Grid xs={12} md={4}>
+          <Grid container spacing={3} justifyContent="center" sx={{ height: '100%' }}> {/* Ensure Grid takes full height */}
+            <Grid item xs={12} sm={6} md={4}>
               <Pomodoro />
             </Grid>
-            <Grid xs={12} md={4}>
-              <TodoForm onTodoCreated={handleTodoCreated} />
-              <TodoList
-                todos={todos}
-                onTodoDeleted={handleTodoDeleted}
-                onTodoToggled={handleTodoToggled}
-                onTodoUpdated={handleTodoUpdated}
-              />
-            </Grid>
-            <Grid xs={12} md={4}>
+            <TodoSection
+              todos={todos}
+              onTodoDeleted={handleTodoDeleted}
+              onTodoToggled={handleTodoToggled}
+              onTodoUpdated={handleTodoUpdated}
+              onTodoCreated={handleTodoCreated}
+              appBarRef={appBarRef}
+            />
+            <Grid item xs={12} sm={6} md={4}>
               <Memo />
             </Grid>
           </Grid>
@@ -113,3 +113,4 @@ function App() {
 }
 
 export default App;
+        
