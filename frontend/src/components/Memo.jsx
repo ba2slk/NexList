@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, Typography, TextField, Button } from '@mui/material';
+import { Card, CardContent, Typography, TextField, Button, Box } from '@mui/material';
 
 function Memo() {
   const [memo, setMemo] = useState('');
@@ -31,9 +31,11 @@ function Memo() {
           onChange={(e) => setMemo(e.target.value)}
           sx={{ mb: 2 }} // Add margin bottom for the button
         />
-        <Button variant="contained" color="primary" onClick={handleSave}>
-          Save Memo
-        </Button>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Button variant="contained" color="primary" onClick={handleSave}>
+            Save
+          </Button>
+        </Box>
       </CardContent>
     </Card>
   );

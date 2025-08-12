@@ -64,6 +64,9 @@ export const getAppTheme = (mode) => {
             },
           }),
     },
+    typography: {
+      fontFamily: 'Inter, sans-serif',
+    },
     components: {
       MuiCssBaseline: {
         styleOverrides: {
