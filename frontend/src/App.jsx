@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import AppBar from '@mui/material/AppBar';
@@ -7,17 +7,24 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
+import IconButton from '@mui/material/IconButton';
+import Brightness4Icon from '@mui/icons-material/Brightness4'; // Moon icon for dark mode
+import Brightness7Icon from '@mui/icons-material/Brightness7'; // Sun icon for light mode
+
 // Removed Box, TodoForm imports
 import Pomodoro from './components/Pomodoro';
 import Memo from './components/Memo';
 import TodoSection from './components/TodoSection';
 import { login, logout, getLoginStatus, getTodos } from './api';
-import theme from './theme';
+import { getAppTheme } from './theme';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [todos, setTodos] = useState([]);
+  const [mode, setMode] = useState('light'); // State for theme mode
   const appBarRef = useRef(null);
+
+  const theme = useMemo(() => getAppTheme(mode), [mode]);
 
   useEffect(() => {
     const checkAndFetchTodos = async () => {
@@ -69,6 +76,10 @@ function App() {
     );
   };
 
+  const toggleTheme = () => {
+    setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light'));
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -77,6 +88,9 @@ function App() {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             NexList
           </Typography>
+          <IconButton sx={{ ml: 1 }} onClick={toggleTheme} color="inherit">
+            {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+          </IconButton>
           {isLoggedIn ? (
             <Button color="inherit" onClick={handleLogout}>Logout</Button>
           ) : (
@@ -90,14 +104,16 @@ function App() {
             <Grid item xs={12} sm={6} md={4}>
               <Pomodoro />
             </Grid>
-            <TodoSection
-              todos={todos}
-              onTodoDeleted={handleTodoDeleted}
-              onTodoToggled={handleTodoToggled}
-              onTodoUpdated={handleTodoUpdated}
-              onTodoCreated={handleTodoCreated}
-              appBarRef={appBarRef}
-            />
+            <Grid item xs={12} sm={6} md={4}>
+              <TodoSection
+                todos={todos}
+                onTodoDeleted={handleTodoDeleted}
+                onTodoToggled={handleTodoToggled}
+                onTodoUpdated={handleTodoUpdated}
+                onTodoCreated={handleTodoCreated}
+                appBarRef={appBarRef}
+              />
+            </Grid>
             <Grid item xs={12} sm={6} md={4}>
               <Memo />
             </Grid>
