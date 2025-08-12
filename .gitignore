@@ -183,3 +183,8 @@ google_credentials.json
 
 # todos.md
 todos.md
+
+node_modules/
+
+# Informal Specifiaction for AI-driven frontend
+gemini.md
