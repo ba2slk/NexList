@@ -3,9 +3,7 @@ from db.database import create_tables
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
-from todos.models import Todo
+from fastapi.responses import FileResponse
 from todos.router import router as todos_router
 from auth.router import router as auth_router
 from auth.models import User
@@ -16,7 +14,7 @@ create_tables()
 
 # FastAPI Configuration
 app = FastAPI(debug=True)
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/assets", StaticFiles(directory="static/dist/assets"), name="assets")
 
 # include routers
 app.include_router(todos_router)
@@ -25,17 +23,13 @@ app.include_router(auth_router)
 # CORS 허용
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8000", "http://127.0.0.1:8000"],
+    allow_origins=["http://localhost:8000", "http://127.0.0.1:8000", "http://localhost:5173", "http://127.0.0.1:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-# BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # 이 파일이 위치한 절대 경로 상의 디렉토리 명
-templates = Jinja2Templates(directory="templates")  # templates 폴더명 지정
-
-
-@app.get("/main", response_class=HTMLResponse)
-def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+@app.get("/{full_path:path}")
+async def serve_react_app(request: Request, full_path: str):
+    return FileResponse("static/dist/index.html")

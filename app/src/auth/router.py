@@ -1,5 +1,5 @@
 import requests
-from fastapi import APIRouter, HTTPException, Response, Depends
+from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from auth.constants import *
@@ -32,7 +32,9 @@ async def auth_google(code: str, db: Session = Depends(get_db)) -> RedirectRespo
 
     jwt_token = create_jwt_token({"user_id": user_info.id})  #jwt token 생성
     
-    response = RedirectResponse(url="/main")  #jwt token 발급 및 main/ 리디렉션
+    response = RedirectResponse(url=FRONTEND_URL)  #jwt token 발급 및 frontend로 리디렉션
+
+    # smaesite="none": POST를 포함한 'cross-site' 요청으로부터 쿠키 허용, 단 secure=True 필수
     response.set_cookie(
         key="access_token", value=jwt_token, httponly=True, samesite="lax"
     )

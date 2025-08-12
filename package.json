@@ -1,0 +1,34 @@
+{
+  "name": "nexlist",
+  "version": "1.0.0",
+  "description": "<img width=\"2879\" height=\"1799\" alt=\"image\" src=\"https://github.com/user-attachments/assets/a0459d41-1929-4647-b050-6ad6313ca639\" />",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "vite build",
+    "dev": "vite"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ba2slk/NexList.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ba2slk/NexList/issues"
+  },
+  "homepage": "https://github.com/ba2slk/NexList#readme",
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.0.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "vite": "^7.1.1"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.3.1",
+    "@mui/material": "^7.3.1"
+  }
+}
