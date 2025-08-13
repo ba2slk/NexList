@@ -187,6 +187,3 @@ todos.md
 # Front-end
 node_modules/
 .vite/
-
-# Informal Specifiaction for AI-driven frontend
-gemini/
