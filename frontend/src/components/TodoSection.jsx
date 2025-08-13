@@ -1,78 +1,168 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Grid, Box } from '@mui/material';
+import React, { useState, useLayoutEffect, useRef } from 'react';
+import { Grid, Box, Typography } from '@mui/material';
 import TodoList from './TodoList';
 import TodoForm from './TodoForm';
 
-function TodoSection({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, onTodoCreated, appBarRef, todoInputRef }) {
-  const todoFormRef = useRef(null);
-  const todoListWrapperRef = useRef(null); // Ref for the TodoList's parent Box
-  const [todoListMaxHeight, setTodoListMaxHeight] = useState(400); // Initial value
+function TodoSection({
+  todos,
+  onTodoDeleted,
+  onTodoToggled,
+  onTodoUpdated,
+  onTodoCreated,
+  appBarRef,
+  todoInputRef,
+}) {
+  const listWrapperRef = useRef(null);
+  const formOuterRef  = useRef(null);
 
-  useEffect(() => {
-    const calculateHeights = () => {
-      const appBarHeight = appBarRef.current ? appBarRef.current.offsetHeight : 0;
-      const containerMt = 32; // sx={{ mt: 4 }} from App.jsx Container
-      const todoListBoxPadding = 32; // p: 2 on TodoList's main Box
+  const [listMaxHeight, setListMaxHeight] = useState(400);
+  const [formHeight, setFormHeight] = useState(0);
+  const [sbw, setSbw] = useState(0);
+  const [lockedWidth, setLockedWidth] = useState(null);
 
-      // Height of the TodoForm (including its own padding/margin)
-      const actualTodoFormHeight = todoFormRef.current ? todoFormRef.current.offsetHeight : 0;
+  const isEmpty = !todos || todos.length === 0;
 
-      // Total available height for the content area (excluding AppBar and its top margin)
-      const totalContentHeight = window.innerHeight - appBarHeight - containerMt;
+  const SAFE_GAP = 24;   // 리스트와 폼 사이 최소 시각 간격
+  const STICKY_GAP = 16; // 화면 하단에서 띄우는 값
 
-      // Remaining height for TodoList (total content height - TodoForm height - TodoList's own padding)
-      const calculatedListHeight = totalContentHeight - actualTodoFormHeight - todoListBoxPadding - 16; // Small buffer
+  const measure = () => {
+    // 1) 스크롤바 폭
+    const w = window.innerWidth - document.documentElement.clientWidth;
+    setSbw(w > 0 ? w : 0);
 
-      setTodoListMaxHeight(calculatedListHeight > 0 ? calculatedListHeight : 0);
+    // 2) 리스트 래퍼 폭: 처음 한 번 고정
+    const lw = listWrapperRef.current?.offsetWidth ?? 0;
+    if (!lockedWidth && lw) setLockedWidth(lw);
+
+    // 3) 폼 "실" 높이 (내부 Box 기준) + sticky 여백 포함
+    const innerFormEl = formOuterRef.current?.firstElementChild;
+    const formContentH = innerFormEl ? innerFormEl.getBoundingClientRect().height : 0;
+    setFormHeight(formContentH + STICKY_GAP);
+
+    // 4) 리스트 최대 높이
+    const appBarH = appBarRef?.current ? appBarRef.current.offsetHeight : 0;
+    const containerMt = 32;     // Container sx={{ mt: 4 }}
+    const listCardPadding = 32; // TodoList 카드 p:2 의 상하 합
+    const total = window.innerHeight - appBarH - containerMt;
+    const available = total - (formContentH + STICKY_GAP) - listCardPadding;
+    setListMaxHeight(Math.max(0, available));
+  };
+
+  // 레이아웃이 그려진 "직후"에 측정 + 한 프레임 지연으로 값 안정화
+  useLayoutEffect(() => {
+    const run = () => {
+      measure();
+      requestAnimationFrame(measure);
     };
+    run();
 
-    calculateHeights();
-    window.addEventListener('resize', calculateHeights);
+    window.addEventListener('resize', run);
+    window.addEventListener('scroll', run, { passive: true });
 
+    const ro = 'ResizeObserver' in window ? new ResizeObserver(run) : null;
+    if (ro) {
+      if (listWrapperRef.current) ro.observe(listWrapperRef.current);
+      if (formOuterRef.current) ro.observe(formOuterRef.current);
+    }
     return () => {
-      window.removeEventListener('resize', calculateHeights);
+      window.removeEventListener('resize', run);
+      window.removeEventListener('scroll', run);
+      ro?.disconnect();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appBarRef]);
 
   return (
-    <Grid item xs={12} sm={6} md={4} container direction="column" justifyContent="flex-start"
-      sx={{
-        height: '100%', // Ensure Grid item takes full height of its parent (Container)
-        position: 'relative', // For absolute positioning of TodoForm
-      }}
+    <Grid
+      item
+      xs={12}
+      sm={6}
+      md={4}
+      container
+      direction="column"
+      justifyContent="flex-start"
+      sx={{ position: 'relative', height: '100%' }}
     >
+      {/* 리스트 영역 */}
       <Box
-        ref={todoListWrapperRef}
+        ref={listWrapperRef}
         sx={{
-          flexGrow: 1, // Allow TodoList to take available space
-          overflow: 'hidden', // Hide overflow from TodoList's internal scroll
+          flexGrow: 1,
+          overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
-          // The glassmorphism styles are now applied via MuiPaper in theme.js
-          // The padding is handled by TodoList's internal Box
+          position: 'relative',
+          // 폼 높이 + 추가 간격 + iOS 안전영역
+          pb: `calc(${formHeight}px + ${SAFE_GAP}px + env(safe-area-inset-bottom, 0px))`,
+          zIndex: 1,
         }}
       >
+        {isEmpty && (
+          <Box
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              pointerEvents: 'none',
+              userSelect: 'none',
+            }}
+          >
+            <Typography
+              aria-live="polite"
+              sx={{
+                fontWeight: 600,
+                letterSpacing: 0.5,
+                color: (theme) =>
+                  theme.palette.mode === 'light'
+                    ? 'rgba(60,72,90,0.15)'
+                    : 'rgba(214,222,235,0.12)',
+                fontSize: { xs: '24px', sm: '28px', md: '32px' },
+                textAlign: 'center',
+              }}
+            >
+              할 일이 없습니다.
+            </Typography>
+          </Box>
+        )}
+
         <TodoList
           todos={todos}
           onTodoDeleted={onTodoDeleted}
           onTodoToggled={onTodoToggled}
           onTodoUpdated={onTodoUpdated}
-          maxHeight={todoListMaxHeight} // Pass calculated maxHeight to TodoList
+          maxHeight={listMaxHeight}
         />
+
+        {/* 추가 안전 간격 (그림자/광원 여유) */}
+        <Box sx={{ height: `${SAFE_GAP}px`, flex: '0 0 auto' }} />
       </Box>
+
+      {/* 하단 입력 폼 */}
       <Box
-        ref={todoFormRef}
+        ref={formOuterRef}
         sx={{
-          position: 'sticky', // Stick to the bottom of the parent Box
-          bottom: 0,
-          width: '100%', // Ensure it takes full width
+          position: 'sticky',
+          bottom: STICKY_GAP,
+          // 🔑 항상 최소 간격 확보 — 측정 실패해도 붙지 않게
+          mt: `${SAFE_GAP}px`,
           display: 'flex',
           justifyContent: 'center',
-          zIndex: 100, // Ensure it's above TodoList
-          // Glassmorphism styles are handled by theme.js
+          zIndex: 10,
+          px: `${sbw / 2}px`,       // 스크롤바 대칭 보정
+          width: '100%',
+          pointerEvents: 'none',    // 래퍼는 통과
         }}
       >
-        <TodoForm onTodoCreated={onTodoCreated} ref={todoInputRef} />
+        <Box
+          sx={{
+            width: lockedWidth ? `${lockedWidth}px` : '100%',
+            pointerEvents: 'auto',  // 실제 폼만 상호작용
+          }}
+        >
+          <TodoForm onTodoCreated={onTodoCreated} ref={todoInputRef} />
+        </Box>
       </Box>
     </Grid>
   );

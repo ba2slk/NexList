@@ -105,7 +105,7 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <AppBar position="static" ref={appBarRef}>
+      <AppBar position="static" ref={appBarRef} className="no-glow">
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             NexList

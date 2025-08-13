@@ -6,6 +6,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import { createTodo } from '../api';
 import dayjs from 'dayjs';
+import { useTheme, alpha } from '@mui/material/styles';
 
 const TodoForm = forwardRef(({ onTodoCreated }, ref) => {
   const [task, setTask] = useState('');
@@ -13,10 +14,13 @@ const TodoForm = forwardRef(({ onTodoCreated }, ref) => {
   const [openDatePicker, setOpenDatePicker] = useState(false);
 
   const inputRef = useRef(null);
-  const datePickerAnchorRef = useRef(null); // IconButton anchor
+  const datePickerAnchorRef = useRef(null);
+
+  const theme = useTheme();
+  const isLight = theme.palette.mode === 'light';
 
   useImperativeHandle(ref, () => ({
-    focusTodoInput: () => inputRef.current?.focus()
+    focusTodoInput: () => inputRef.current?.focus(),
   }));
 
   const handleSubmit = async (e) => {
@@ -24,7 +28,7 @@ const TodoForm = forwardRef(({ onTodoCreated }, ref) => {
     if (!task.trim()) return;
     const newTodo = await createTodo({
       task,
-      due_date: dueDate && dueDate.isValid() ? dueDate.format('YYYY-MM-DD') : null
+      due_date: dueDate && dueDate.isValid() ? dueDate.format('YYYY-MM-DD') : null,
     });
     onTodoCreated(newTodo);
     setTask('');
@@ -38,16 +42,37 @@ const TodoForm = forwardRef(({ onTodoCreated }, ref) => {
       sx={{
         display: 'flex',
         gap: 1,
-        mb: 2,
         flexDirection: 'row',
         alignItems: 'center',
-        maxWidth: 520,
-        mx: 'auto',
+        width: '100%',
         p: 2,
         borderRadius: 2,
-        boxShadow: 3,
-        bgcolor: 'background.paper',
-        overflowX: 'hidden', // 안전 차단
+        // ▼ Glassmorphism
+        position: 'relative',
+        overflow: 'hidden',
+        isolation: 'isolate',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        backgroundColor: isLight ? alpha('#ffffff', 0.65) : alpha('#0B253A', 0.9),
+        border: isLight
+          ? '1px solid rgba(255,255,255,0.45)'
+          : '1px solid rgba(255,255,255,0.10)',
+        boxShadow: '0 4px 18px rgba(0,0,0,0.12)',
+        // 은은한 카드 내부 광원 (중첩 최소화)
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+          zIndex: 0,
+          background: isLight
+            ? 'radial-gradient(60% 40% at 18% 0%, rgba(255,255,255,0.18), rgba(255,255,255,0.08) 40%, transparent 70%)'
+            : 'radial-gradient(120% 40% at 20% 0%, rgba(255,255,255,0.04), rgba(255,255,255,0.01) 40%, transparent 70%)',
+          mixBlendMode: 'screen',
+        },
+        // 내용은 광원 위
+        '& > *': { position: 'relative', zIndex: 1 },
+        overflowX: 'hidden',
       }}
     >
       <TextField
@@ -55,7 +80,7 @@ const TodoForm = forwardRef(({ onTodoCreated }, ref) => {
         fullWidth
         sx={{ flexGrow: 1 }}
         variant="outlined"
-        label="Add a new todo"
+        label="할 일을 입력하세요"
         value={task}
         onChange={(e) => setTask(e.target.value)}
       />
@@ -67,22 +92,20 @@ const TodoForm = forwardRef(({ onTodoCreated }, ref) => {
           onClose={() => setOpenDatePicker(false)}
           value={dueDate}
           onChange={(newValue) => setDueDate(newValue)}
-          // hide the internal text field (icon-only trigger)
           slotProps={{
             textField: {
               inputProps: { readOnly: true },
-              sx: { display: 'none' },
+              sx: { display: 'none' }, // 아이콘으로만 열기
             },
-            // popper anchored to the icon; open ABOVE it (top-end)
             popper: {
               anchorEl: () => datePickerAnchorRef.current,
-              placement: 'top-end',
+              placement: 'top-end', // 폼이 하단에 있으므로 위로
               modifiers: [
-                { name: 'offset', options: { offset: [0, 10] } }, // 10px gap
+                { name: 'offset', options: { offset: [0, 10] } },
                 { name: 'flip', options: { fallbackPlacements: ['bottom-end'] } },
                 { name: 'preventOverflow', options: { boundary: 'viewport', padding: 8 } },
               ],
-              disablePortal: false, // render to body (clipping 방지)
+              disablePortal: false,
             },
           }}
         />
