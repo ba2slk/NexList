@@ -24,3 +24,7 @@ TOKEN_OBTAIN_FAILED_DETAIL = "Failed to obtain access token from Google"
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM")
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+
+# Frontend
+FRONTEND_URL = os.getenv("FRONTEND_URL")
