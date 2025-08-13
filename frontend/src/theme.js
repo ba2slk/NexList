@@ -81,7 +81,7 @@ export const getAppTheme = (mode) => {
         },
       },
 
-      // ✅ 기존 유리/노이즈/글로우 유지, 트랜지션만 추가
+      // 트랜지션 추가
       MuiPaper: {
         styleOverrides: {
           root: {
@@ -103,7 +103,7 @@ export const getAppTheme = (mode) => {
             transition:
               'background-color 220ms ease, border-color 220ms ease, box-shadow 220ms ease, backdrop-filter 220ms ease',
 
-            // 🔹 얇은 유리 질감 노이즈
+            // 얇은 유리 질감 노이즈
             '&::before': {
               content: '""',
               position: 'absolute',
@@ -120,7 +120,7 @@ export const getAppTheme = (mode) => {
               backgroundSize: '200px 200px',
             },
 
-            // 💡 glow 효과 (배너 등에서 no-glow로 끌 수 있음)
+            // glow 효과 (배너 등에서 no-glow로 끌 수 있음)
             '&::after': {
               content: '""',
               position: 'absolute',
@@ -146,7 +146,7 @@ export const getAppTheme = (mode) => {
           root: {
             transition:
               'background-color .3s ease, color .3s ease, border-color .3s ease, box-shadow .3s ease, transform .3s ease',
-            '&:hover': { transform: 'scale(1.05)', boxShadow: '0 8px 26px rgba(0,0,0,0.18)' },
+            '&:hover': { transform: 'scale(1.05)', boxShadow: '0 8px 26px rgba(0,0,0,0.12)' },
             '&:active': { transform: 'scale(0.96)' },
           },
         },

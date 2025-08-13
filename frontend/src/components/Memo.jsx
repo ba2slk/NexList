@@ -38,8 +38,8 @@ function Memo() {
         backgroundColor: surfaceBg,
         boxShadow:
           theme.palette.mode === 'dark'
-            ? '0 10px 30px rgba(0,0,0,0.35)'
-            : '0 10px 30px rgba(0,0,0,0.12)',
+            ? '0 10px 30px rgba(0,0,0,0.12)'
+            : '0 10px 30px rgba(0,0,0,0.04)',
         '&::before': {
           content: '""',
           position: 'absolute',

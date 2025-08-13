@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { List, ListItem, ListItemText, IconButton, Checkbox, TextField, Box, Typography } from '@mui/material';
-import { Delete, Save } from '@mui/icons-material';
+import { Delete } from '@mui/icons-material';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -12,7 +12,6 @@ import { useTheme, alpha } from '@mui/material/styles';
 
 function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeight }) {
   const [editingTaskTodoId, setEditingTaskTodoId] = useState(null);
-  const [editingDueDateTodoId, setEditingDueDateTodoId] = useState(null);
   const [editedTask, setEditedTask] = useState('');
   const [editedDueDate, setEditedDueDate] = useState(null);
   const [openDatePickerId, setOpenDatePickerId] = useState(null);
@@ -25,21 +24,36 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
   const listRef = useRef(null);
   const [, force] = useState(0);
 
-  // custom overlay scrollbar state
+  // ── 커스텀 오버레이 스크롤바
   const [thumbTop, setThumbTop] = useState(0);
   const [thumbH, setThumbH] = useState(0);
   const [showBar, setShowBar] = useState(false);
   const hideTimerRef = useRef(null);
 
-  // auto scroll to bottom when new item appears (only if scrollbar exists)
+  // ▶️ 새로 추가된 항목이 "맨 끝"에 붙었을 때만 자동 스크롤
+  const prevIdsRef = useRef(new Set());
   useEffect(() => {
     const el = listRef.current;
     if (!el) return;
-    if (el.scrollHeight <= el.clientHeight) return;
-    requestAnimationFrame(() => {
-      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
-    });
-  }, [todos.length]);
+
+    const currIds = new Set(todos.map(t => t?.id));
+    let addedId = null;
+    for (const t of todos) {
+      const id = t?.id;
+      if (id != null && !prevIdsRef.current.has(id)) addedId = id;
+    }
+    if (addedId) {
+      const last = todos[todos.length - 1];
+      const isAppendedAtEnd = last && (last.id === addedId || last.isNew);
+      const hasScrollbar = el.scrollHeight > el.clientHeight;
+      if (isAppendedAtEnd && hasScrollbar) {
+        requestAnimationFrame(() => {
+          el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+        });
+      }
+    }
+    prevIdsRef.current = currIds;
+  }, [todos]);
 
   const recalcThumb = () => {
     const el = listRef.current;
@@ -55,14 +69,12 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
   useEffect(() => {
     const el = listRef.current;
     if (!el) return;
-
     const onScroll = () => {
       recalcThumb();
       setShowBar(true);
       clearTimeout(hideTimerRef.current);
       hideTimerRef.current = setTimeout(() => setShowBar(false), 700);
     };
-
     const onEnter = () => setShowBar(true);
     const onLeave = () => setShowBar(false);
 
@@ -71,7 +83,6 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
     el.addEventListener('mouseenter', onEnter);
     el.addEventListener('mouseleave', onLeave);
     window.addEventListener('resize', recalcThumb);
-
     return () => {
       el.removeEventListener('scroll', onScroll);
       el.removeEventListener('mouseenter', onEnter);
@@ -81,6 +92,7 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
     };
   }, [maxHeight]);
 
+  // CRUD helpers
   const handleDelete = async (id) => {
     await deleteTodo(id);
     onTodoDeleted(id);
@@ -92,26 +104,30 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
     onTodoToggled(id);
   };
 
-  const handleSaveClick = async (id, field, newDueDateValue = undefined) => {
+  const saveTask = async (id, value) => {
     const todoToUpdate = todos.find((t) => t.id === id);
-    let updatedData = {};
-    if (field === 'task') {
-      updatedData = { task: editedTask, due_date: todoToUpdate.due_date };
-      setEditingTaskTodoId(null);
-      setEditedTask('');
-    } else if (field === 'due_date') {
-      const finalDueDate = newDueDateValue !== undefined ? newDueDateValue : editedDueDate;
-      updatedData = { task: todoToUpdate.task, due_date: finalDueDate ? dayjs(finalDueDate).format('YYYY-MM-DD') : null };
-      setEditingDueDateTodoId(null);
-      setEditedDueDate(null);
-      setOpenDatePickerId(null);
-    }
+    const updatedData = { task: value, due_date: todoToUpdate.due_date };
     await updateTodo(id, updatedData);
     onTodoUpdated(id, updatedData.task, updatedData.due_date);
   };
 
-  const handleKeyDown = (event, id, field) => {
-    if (event.key === 'Enter') handleSaveClick(id, field);
+  const saveDue = async (id, valueDayjs) => {
+    const todoToUpdate = todos.find((t) => t.id === id);
+    const updatedData = {
+      task: todoToUpdate.task,
+      due_date: valueDayjs ? dayjs(valueDayjs).format('YYYY-MM-DD') : null,
+    };
+    await updateTodo(id, updatedData);
+    onTodoUpdated(id, updatedData.task, updatedData.due_date);
+  };
+
+  const handleKeyDown = (event, id) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      saveTask(id, editedTask);
+      setEditingTaskTodoId(null);
+      setEditedTask('');
+    }
   };
 
   const itemVariants = useMemo(() => ({
@@ -125,7 +141,6 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
   return (
     <Box
       sx={{
-        // 🧽 컨테이너는 완전 투명: 배경/블러/보더 모두 제거
         maxWidth: 520,
         minWidth: 520,
         mx: 'auto',
@@ -148,9 +163,8 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
           overflowX: 'hidden',
           px: 0,
           py: 0,
-          // 네이티브 스크롤바 숨김(대칭 유지) — 커스텀 thumb만 표시
-          scrollbarWidth: 'none',                     // Firefox
-          '&::-webkit-scrollbar': { width: 0, height: 0 }, // WebKit
+          scrollbarWidth: 'none',
+          '&::-webkit-scrollbar': { width: 0, height: 0 },
         }}
       >
         {todos.map((todo, index) => {
@@ -171,7 +185,6 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
               }}
               style={{ position: 'relative', width: '100%' }}
             >
-              {/* 생성 애니메이션 오버레이(원→수평확장→둥근사각형, 그대로 유지) */}
               {shouldAnimate && (
                 <motion.div
                   initial={{ clipPath: 'circle(0% at 50% 50%)' }}
@@ -194,7 +207,6 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
                 />
               )}
 
-              {/* 실제 카드 */}
               <motion.div
                 variants={itemVariants}
                 initial={shouldAnimate ? 'hidden' : false}
@@ -206,19 +218,21 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
                     my: 1.25,
                     mx: 0,
                     px: 2,
-                    py: 1.75,
+                    py: 0.8,
                     borderRadius: 2,
                     position: 'relative',
                     overflow: 'hidden',
-                    isolation: 'isolate', // 블렌딩 누수 방지
+                    isolation: 'isolate',
                     backdropFilter: 'blur(12px)',
                     WebkitBackdropFilter: 'blur(12px)',
                     backgroundColor: isLight ? alpha('#ffffff', 0.65) : alpha('#0B253A', 0.9),
                     border: isLight
                       ? '1px solid rgba(255,255,255,0.45)'
                       : '1px solid rgba(255,255,255,0.10)',
-                    boxShadow: '0 4px 18px rgba(0,0,0,0.12)',
-                    // 🟡 카드 개별 radial 광원
+                    boxShadow: isLight
+                      ? '0 4px 18px rgba(0,0,0,0.04)'
+                      : '0 4px 18px rgba(0,0,0,0.12)',
+                    alignItems: 'flex-start',   // ✅ 상단 기준 정렬(체크박스와 제목 수평)
                     '&::before': {
                       content: '""',
                       position: 'absolute',
@@ -231,44 +245,66 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
                       mixBlendMode: 'screen',
                     },
                   }}
+                  // secondaryAction: 달력 + 삭제
                   secondaryAction={
-                    <>
-                      {editingTaskTodoId === todo.id && (
-                        <IconButton edge="end" aria-label="save-task" onClick={() => handleSaveClick(todo.id, 'task')}>
-                          <Save />
-                        </IconButton>
-                      )}
-                      {editingDueDateTodoId === todo.id && (
-                        <IconButton edge="end" aria-label="save-due-date" onClick={() => handleSaveClick(todo.id, 'due_date')}>
-                          <Save />
-                        </IconButton>
-                      )}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <IconButton
+                        edge="end"
+                        aria-label="pick-due"
+                        ref={(el) => (datePickerAnchorRefs.current[todo.id] = el)}
+                        onClick={() => {
+                          setEditedDueDate(
+                            todo.due_date && dayjs(todo.due_date).isValid() ? dayjs(todo.due_date) : null
+                          );
+                          setOpenDatePickerId(todo.id);
+                        }}
+                      >
+                        <CalendarTodayIcon />
+                      </IconButton>
                       <IconButton edge="end" aria-label="delete" onClick={() => handleDelete(todo.id)}>
                         <Delete />
                       </IconButton>
-                    </>
+                    </Box>
                   }
                 >
-                  <Checkbox checked={todo.is_done || false} onChange={() => handleToggle(todo.id)} />
-                  <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, mr: 4 }}>
+                  {/* 체크박스를 제목 첫 줄과 수평으로 맞춤 */}
+                  <Checkbox
+                    checked={todo.is_done || false}
+                    onChange={() => handleToggle(todo.id)}
+                    sx={{ mt: 0.25, alignSelf: 'flex-start' }}
+                  />
+
+                  <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, mr: 10 }}>
+                    {/* 제목(클릭 시 인라인 편집) */}
                     {editingTaskTodoId === todo.id ? (
                       <TextField
                         value={editedTask}
                         onChange={(e) => setEditedTask(e.target.value)}
-                        onKeyDown={(e) => handleKeyDown(e, todo.id, 'task')}
-                        onBlur={() => handleSaveClick(todo.id, 'task')}
+                        onKeyDown={(e) => handleKeyDown(e, todo.id)}
+                        onBlur={() => {
+                          // 포커스가 빠져도 저장
+                          saveTask(todo.id, editedTask);
+                          setEditingTaskTodoId(null);
+                          setEditedTask('');
+                        }}
                         fullWidth
                         variant="standard"
                         autoFocus
+                        // 편집 중에도 라인 높이/크기 고정(정렬 유지)
+                        InputProps={{ sx: { fontSize: '1rem', lineHeight: 1.5, py: 0 } }}
                       />
                     ) : (
                       <ListItemText
                         primary={todo.task}
-                        sx={{
-                          whiteSpace: 'normal',
-                          wordBreak: 'break-word',
-                          textDecoration: todo.is_done ? 'line-through' : 'none',
+                        primaryTypographyProps={{
+                          sx: {
+                            fontSize: '1rem',
+                            lineHeight: 1.5,
+                            fontWeight: 500,
+                            textDecoration: todo.is_done ? 'line-through' : 'none',
+                          },
                         }}
+                        sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}
                         onClick={() => {
                           setEditingTaskTodoId(todo.id);
                           setEditedTask(todo.task);
@@ -276,69 +312,49 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
                       />
                     )}
 
-                    {/* Due Date */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <LocalizationProvider dateAdapter={AdapterDayjs}>
-                        <DatePicker
-                          open={openDatePickerId === todo.id}
-                          onOpen={() => setOpenDatePickerId(todo.id)}
-                          onClose={() => setOpenDatePickerId(null)}
-                          value={editedDueDate}
-                          onChange={(newValue) => {
-                            setEditedDueDate(newValue);
-                            if (newValue && newValue.isValid()) {
-                              handleSaveClick(todo.id, 'due_date', newValue);
-                            } else if (newValue === null) {
-                              handleSaveClick(todo.id, 'due_date', null);
-                            }
-                          }}
-                          slotProps={{
-                            textField: { inputProps: { readOnly: true }, sx: { display: 'none' } },
-                            popper: {
-                              anchorEl: () => datePickerAnchorRefs.current[todo.id],
-                              placement: 'bottom-end',
-                              modifiers: [
-                                { name: 'offset', options: { offset: [0, 10] } },
-                                { name: 'flip', options: { fallbackPlacements: ['top-end'] } },
-                                { name: 'preventOverflow', options: { boundary: 'viewport', padding: 8 } },
-                              ],
-                              disablePortal: false,
-                            },
-                          }}
-                        />
-                        <IconButton
-                          ref={(el) => (datePickerAnchorRefs.current[todo.id] = el)}
-                          onClick={() => {
-                            setEditingDueDateTodoId(todo.id);
-                            setEditedDueDate(
-                              todo.due_date && dayjs(todo.due_date).isValid() ? dayjs(todo.due_date) : null
-                            );
-                            setOpenDatePickerId(todo.id);
-                          }}
-                          aria-label="Select due date"
-                          sx={{ p: '8px' }}
-                        >
-                          <CalendarTodayIcon />
-                        </IconButton>
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          sx={{ whiteSpace: 'nowrap', cursor: 'pointer' }}
-                          onClick={() => {
-                            setEditingDueDateTodoId(todo.id);
-                            setEditedDueDate(
-                              todo.due_date && dayjs(todo.due_date).isValid() ? dayjs(todo.due_date) : null
-                            );
-                            setOpenDatePickerId(todo.id);
-                          }}
-                        >
-                          {todo.due_date && dayjs(todo.due_date).isValid()
-                            ? `Due: ${dayjs(todo.due_date).format('YYYY-MM-DD')}`
-                            : '마감 기한 입력하기'}
-                        </Typography>
-                      </LocalizationProvider>
-                    </Box>
+                    {/* 아래 줄: Due date */}
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mt: 0, fontSize: '0.765rem' }}
+                    >
+                      {todo.due_date && dayjs(todo.due_date).isValid()
+                        ? `Due: ${dayjs(todo.due_date).format('YYYY-MM-DD')}`
+                        : 'Due: -'}
+                    </Typography>
                   </Box>
+
+                  {/* DatePicker는 아이콘 옆(secondaryAction)에서만 열림 */}
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DatePicker
+                      open={openDatePickerId === todo.id}
+                      onOpen={() => setOpenDatePickerId(todo.id)}
+                      onClose={() => setOpenDatePickerId(null)}
+                      value={editedDueDate}
+                      onChange={(newValue) => {
+                        setEditedDueDate(newValue);
+                        // 선택 즉시 저장
+                        if (newValue && newValue.isValid()) {
+                          saveDue(todo.id, newValue);
+                        } else if (newValue === null) {
+                          saveDue(todo.id, null);
+                        }
+                      }}
+                      slotProps={{
+                        textField: { inputProps: { readOnly: true }, sx: { display: 'none' } },
+                        popper: {
+                          anchorEl: () => datePickerAnchorRefs.current[todo.id],
+                          placement: 'bottom-end',
+                          modifiers: [
+                            { name: 'offset', options: { offset: [0, 10] } },
+                            { name: 'flip', options: { fallbackPlacements: ['top-end'] } },
+                            { name: 'preventOverflow', options: { boundary: 'viewport', padding: 8 } },
+                          ],
+                          disablePortal: false,
+                        },
+                      }}
+                    />
+                  </LocalizationProvider>
                 </ListItem>
               </motion.div>
             </motion.div>

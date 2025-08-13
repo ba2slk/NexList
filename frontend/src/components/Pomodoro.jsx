@@ -111,8 +111,8 @@ function Pomodoro() {
         backgroundColor: surfaceBg, // ← 카드 표면 투명도 통일
         boxShadow:
           theme.palette.mode === 'dark'
-            ? '0 10px 30px rgba(0,0,0,0.35)'
-            : '0 10px 30px rgba(0,0,0,0.12)',
+            ? '0 10px 30px rgba(0,0,0,0.12)'
+            : '0 10px 30px rgba(0,0,0,0.04)',
         // ★ 광원: 카드마다 1회, 좌상단 고정. 모든 카드 동일 값 사용
         '&::before': {
           content: '""',
