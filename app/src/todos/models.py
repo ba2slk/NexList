@@ -13,3 +13,4 @@ class Todo(Base):
     task = Column(String(255))
     due_date = Column(Date)
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'))
+    today = Column(Boolean, default=True)

@@ -17,8 +17,8 @@ class TodoService:
         return self.repository.create_todo(todo, user.id)
     
 
-    def get_all_todos(self, user: User) -> list[Todo]:
-        return self.repository.get_all_todos(user.id)
+    def get_all_todos(self, user: User, today: bool | None) -> list[Todo]:
+        return self.repository.get_all_todos(user.id, today)
     
 
     def get_todo_by_id(self, id: int, user: User) -> Todo:

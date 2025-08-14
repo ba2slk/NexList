@@ -56,8 +56,13 @@ class TodoRepository(TodoRepositoryInterface):
         )
 
     # READ: all todos
-    def get_all_todos(self, user_id: int) -> list[Todo] | None:
-        return self.db.query(Todo).filter(Todo.user_id == user_id).all()
+    def get_all_todos(self, user_id: int, today: bool | None) -> list[Todo] | None:
+        # 오늘 할 일 여부와 상관 없이 USER_ID의 모든 Todo 반환
+        if today is None:
+            return self.db.query(Todo).filter_by(user_id=user_id).all()
+        
+        # 오늘 할 일 여부에 따른 USER_ID의 Todo 반환
+        return self.db.query(Todo).filter_by(user_id=user_id, today=today).all()
 
     # CREATE: single todo
     def create_todo(self, todo: TodoItem, user_id: int) -> Todo:
