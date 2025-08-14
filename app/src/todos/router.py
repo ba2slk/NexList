@@ -1,10 +1,10 @@
-
 from auth.dependencies import get_current_user
 from auth.models import User
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Query
 from todos.dependencies import get_todo_service
 from todos.schemas import TodoCompletedState, TodoItem, TodoResponse
 from todos.service import TodoService
+from typing import Optional
 
 router = APIRouter(prefix="/todos", tags=["Todos"])
 
@@ -31,9 +31,13 @@ def create_todo_item(
 )
 def read_todo_list(
     service: TodoService = Depends(get_todo_service),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    today: Optional[bool] = Query(
+        default=None,
+        description="오늘 할 일만: true, 오늘 할 일이 아닌 것만: false, 전체: 생략"
+    )
 ):
-    return service.get_all_todos(user)
+    return service.get_all_todos(user, today)
 
 
 # 하나의 todo만 불러오기

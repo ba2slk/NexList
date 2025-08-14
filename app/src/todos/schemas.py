@@ -10,6 +10,7 @@ from pydantic import BaseModel
 class TodoItem(BaseModel):
     task: str
     due_date: Optional[date] = None
+    today: bool
 
 
 # Request
@@ -23,6 +24,7 @@ class TodoResponse(BaseModel):
     task: str
     due_date: Optional[date]
     is_done: bool
+    today: bool
 
     class Config:
         from_attributes = True  # (deprecated) orm_mode
