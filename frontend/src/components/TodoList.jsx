@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
-import { List, ListItem, ListItemText, IconButton, Checkbox, TextField, Box, Typography } from '@mui/material';
+import { List, ListItem, ListItemText, IconButton, Checkbox, TextField, Box, Typography, Tabs, Tab } from '@mui/material';
 import { Delete } from '@mui/icons-material';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -10,7 +10,8 @@ import dayjs from 'dayjs';
 import { motion } from 'framer-motion';
 import { useTheme, alpha } from '@mui/material/styles';
 
-function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeight }) {
+function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeight, onTabChange }) {
+  const [tabValue, setTabValue] = useState(0); // 0 = 오늘 할 일, 1 = 창고
   const [editingTaskTodoId, setEditingTaskTodoId] = useState(null);
   const [editedTask, setEditedTask] = useState('');
   const [editedDueDate, setEditedDueDate] = useState(null);
@@ -136,7 +137,6 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
   }), []);
 
   const isEmpty = !todos || todos.length === 0;
-  if (isEmpty) return null;
 
   return (
     <Box
@@ -153,65 +153,58 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
         overflowX: 'hidden',
       }}
     >
-      <List
-        ref={listRef}
-        sx={{
-          position: 'relative',
-          zIndex: 1,
-          maxHeight: maxHeight,
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          px: 0,
-          py: 0,
-          scrollbarWidth: 'none',
-          '&::-webkit-scrollbar': { width: 0, height: 0 },
+      {/* 탭 영역 */}
+      <Tabs
+        value={tabValue}
+        onChange={(e, newValue) => {
+          setTabValue(newValue);
+          if (onTabChange) {
+            // 0 = 오늘 할 일(true), 1 = 창고(false)
+            onTabChange(newValue === 0);
+          }
         }}
+        sx={{ mb: 1 }}
+        textColor="primary"
+        indicatorColor="primary"
+        centered
       >
-        {todos.map((todo, index) => {
-          const key = todo.id ?? index;
-          const hasPlayed = playedRef.current.has(key);
-          const shouldAnimate = !!todo.isNew && !hasPlayed;
+        <Tab label="오늘 할 일" />
+        <Tab label="창고" />
+      </Tabs>
 
-          return (
-            <motion.div
-              key={key}
-              initial={shouldAnimate ? 'hidden' : false}
-              animate={shouldAnimate ? 'contentReveal' : { opacity: 1 }}
-              onAnimationComplete={() => {
-                if (shouldAnimate) {
-                  playedRef.current.add(key);
-                  force(v => v + 1);
-                }
-              }}
-              style={{ position: 'relative', width: '100%' }}
-            >
-              {shouldAnimate && (
-                <motion.div
-                  initial={{ clipPath: 'circle(0% at 50% 50%)' }}
-                  animate={{
-                    clipPath: [
-                      'circle(0% at 50% 50%)',
-                      'circle(56% at 50% 50%)',
-                      'inset(0% round 16px)'
-                    ],
-                    opacity: [1, 1, 0]
-                  }}
-                  transition={{ duration: 0.36, ease: [0.2, 0.8, 0.2, 1], times: [0, 0.45, 1] }}
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    backgroundColor: theme.palette.background.paper,
-                    zIndex: 0,
-                    pointerEvents: 'none'
-                  }}
-                />
-              )}
+      {/* 할 일 리스트 */}
+      {!isEmpty && (
+        <List
+          ref={listRef}
+          sx={{
+            position: 'relative',
+            zIndex: 1,
+            maxHeight: maxHeight,
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            px: 0,
+            py: 0,
+            scrollbarWidth: 'none',
+            '&::-webkit-scrollbar': { width: 0, height: 0 },
+          }}
+        >
+          {todos.map((todo, index) => {
+            const key = todo.id ?? index;
+            const hasPlayed = playedRef.current.has(key);
+            const shouldAnimate = !!todo.isNew && !hasPlayed;
 
+            return (
               <motion.div
-                variants={itemVariants}
+                key={key}
                 initial={shouldAnimate ? 'hidden' : false}
                 animate={shouldAnimate ? 'contentReveal' : { opacity: 1 }}
-                style={{ position: 'relative', zIndex: 1 }}
+                onAnimationComplete={() => {
+                  if (shouldAnimate) {
+                    playedRef.current.add(key);
+                    force(v => v + 1);
+                  }
+                }}
+                style={{ position: 'relative', width: '100%' }}
               >
                 <ListItem
                   sx={{
@@ -232,20 +225,8 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
                     boxShadow: isLight
                       ? '0 4px 18px rgba(0,0,0,0.04)'
                       : '0 4px 18px rgba(0,0,0,0.12)',
-                    alignItems: 'flex-start',   // ✅ 상단 기준 정렬(체크박스와 제목 수평)
-                    '&::before': {
-                      content: '""',
-                      position: 'absolute',
-                      inset: 0,
-                      zIndex: 0,
-                      pointerEvents: 'none',
-                      background: isLight
-                        ? 'radial-gradient(60% 40% at 18% 0%, rgba(255,255,255,0.18), rgba(255,255,255,0.08) 40%, transparent 70%)'
-                        : 'radial-gradient(120% 40% at 20% 0%, rgba(255,255,255,0.04), rgba(255,255,255,0.01) 40%, transparent 70%)',
-                      mixBlendMode: 'screen',
-                    },
+                    alignItems: 'flex-start',
                   }}
-                  // secondaryAction: 달력 + 삭제
                   secondaryAction={
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <IconButton
@@ -267,7 +248,6 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
                     </Box>
                   }
                 >
-                  {/* 체크박스를 제목 첫 줄과 수평으로 맞춤 */}
                   <Checkbox
                     checked={todo.is_done || false}
                     onChange={() => handleToggle(todo.id)}
@@ -275,14 +255,12 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
                   />
 
                   <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, mr: 10 }}>
-                    {/* 제목(클릭 시 인라인 편집) */}
                     {editingTaskTodoId === todo.id ? (
                       <TextField
                         value={editedTask}
                         onChange={(e) => setEditedTask(e.target.value)}
                         onKeyDown={(e) => handleKeyDown(e, todo.id)}
                         onBlur={() => {
-                          // 포커스가 빠져도 저장
                           saveTask(todo.id, editedTask);
                           setEditingTaskTodoId(null);
                           setEditedTask('');
@@ -290,7 +268,6 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
                         fullWidth
                         variant="standard"
                         autoFocus
-                        // 편집 중에도 라인 높이/크기 고정(정렬 유지)
                         InputProps={{ sx: { fontSize: '1rem', lineHeight: 1.5, py: 0 } }}
                       />
                     ) : (
@@ -312,7 +289,6 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
                       />
                     )}
 
-                    {/* 아래 줄: Due date */}
                     <Typography
                       variant="body2"
                       color="text.secondary"
@@ -324,7 +300,6 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
                     </Typography>
                   </Box>
 
-                  {/* DatePicker는 아이콘 옆(secondaryAction)에서만 열림 */}
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <DatePicker
                       open={openDatePickerId === todo.id}
@@ -333,7 +308,6 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
                       value={editedDueDate}
                       onChange={(newValue) => {
                         setEditedDueDate(newValue);
-                        // 선택 즉시 저장
                         if (newValue && newValue.isValid()) {
                           saveDue(todo.id, newValue);
                         } else if (newValue === null) {
@@ -357,19 +331,19 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
                   </LocalizationProvider>
                 </ListItem>
               </motion.div>
-            </motion.div>
-          );
-        })}
-      </List>
+            );
+          })}
+        </List>
+      )}
 
-      {/* 커스텀 오버레이 스크롤바 (페이드 인/아웃) */}
+      {/* 커스텀 스크롤바 */}
       <Box
         aria-hidden
         sx={{
           pointerEvents: 'none',
           position: 'absolute',
           right: 6,
-          top: 8,
+          top: 48,
           bottom: 8,
           width: 6,
           borderRadius: 3,
