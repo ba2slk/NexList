@@ -1,3 +1,4 @@
+// App.jsx
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -8,99 +9,118 @@ import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
-import Brightness4Icon from '@mui/icons-material/Brightness4'; // Moon icon for dark mode
-import Brightness7Icon from '@mui/icons-material/Brightness7'; // Sun icon for light mode
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
 
 import Pomodoro from './components/Pomodoro';
 import Memo from './components/Memo';
 import TodoSection from './components/TodoSection';
-import TodoForm from './components/TodoForm'; // Uncommented TodoForm import
-import { login, logout, getLoginStatus, getTodos } from './api';
+import { login, logout, getLoginStatus, getTodosToday } from './api';
 import { getAppTheme } from './theme';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [todos, setTodos] = useState([]);
-  const [mode, setMode] = useState('light'); // State for theme mode
-  const appBarRef = useRef(null);
-  const todoInputRef = useRef(null); // Ref for the todo input
+  const [isTodayTab, setIsTodayTab] = useState(true);
+  const [todosToday, setTodosTodayState] = useState([]);
+  const [todosStorage, setTodosStorageState] = useState([]);
 
+  const appBarRef = useRef(null);
+  const todoInputRef = useRef(null);
+
+  const [mode, setMode] = useState('light');
   const theme = useMemo(() => getAppTheme(mode), [mode]);
 
+  const todos = isTodayTab ? todosToday : todosStorage;
+
   useEffect(() => {
-    const checkAndFetchTodos = async () => {
+    const init = async () => {
       const status = await getLoginStatus();
-      console.log("Login Status:", status);
       setIsLoggedIn(status);
       if (status) {
-        const fetchedTodos = await getTodos();
-        console.log("Fetched Todos:", fetchedTodos);
-        setTodos(fetchedTodos);
+        const todayList = await getTodosToday(true);
+        const storageList = await getTodosToday(false);
+        setTodosTodayState(todayList);
+        setTodosStorageState(storageList);
       } else {
-        setTodos([]);
+        setTodosTodayState([]);
+        setTodosStorageState([]);
       }
     };
-
-    checkAndFetchTodos();
-  }, [isLoggedIn]);
+    init();
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'Enter' && isLoggedIn) {
-        // Check if the currently focused element is not already an input field
-        const activeElement = document.activeElement;
-        const isInputFocused = activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA';
-
+        const el = document.activeElement;
+        const isInputFocused = el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA');
         if (!isInputFocused && todoInputRef.current) {
-          event.preventDefault(); // Prevent default Enter key behavior (e.g., form submission if not intended)
+          event.preventDefault();
           todoInputRef.current.focusTodoInput();
         }
       }
     };
-
     document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isLoggedIn]);
 
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isLoggedIn]); // Re-run effect if login status changes
-
-  const handleLogin = () => {
-    login();
-  };
+  const handleLogin = () => login();
 
   const handleLogout = async () => {
     await logout();
     setIsLoggedIn(false);
+    setTodosTodayState([]);
+    setTodosStorageState([]);
+  };
+
+  const handleTabChange = async (nextIsToday) => {
+    console.log('handleTabChange called with', nextIsToday);
+    setIsTodayTab(nextIsToday);
+    if (!isLoggedIn) return;
+
+    if (nextIsToday && todosToday.length === 0) {
+      const todayList = await getTodosToday(true);
+      setTodosTodayState(todayList);
+    }
+    if (!nextIsToday && todosStorage.length === 0) {
+      const storageList = await getTodosToday(false);
+      setTodosStorageState(storageList);
+    }
   };
 
   const handleTodoCreated = (newTodo) => {
-    setTodos([...todos, { ...newTodo, isNew: true }]);
+    const bucket = newTodo?.today === true;
+    const withFlag = { ...newTodo, isNew: true };
+    if (bucket) {
+      setTodosTodayState((prev) => [...prev, withFlag]);
+    } else {
+      setTodosStorageState((prev) => [...prev, withFlag]);
+    }
   };
 
+  const patchById = (list, id, updater) => list.map((t) => (t.id === id ? updater(t) : t));
+  const removeById = (list, id) => list.filter((t) => t.id !== id);
+
   const handleTodoDeleted = (id) => {
-    setTodos(todos.filter((todo) => todo.id !== id));
+    setTodosTodayState((prev) => removeById(prev, id));
+    setTodosStorageState((prev) => removeById(prev, id));
   };
 
   const handleTodoToggled = (id) => {
-    setTodos(
-      todos.map((todo) =>
-        todo.id === id ? { ...todo, is_done: !todo.is_done } : todo
-      )
-    );
+    setTodosTodayState((prev) => patchById(prev, id, (t) => ({ ...t, is_done: !t.is_done })));
+    setTodosStorageState((prev) => patchById(prev, id, (t) => ({ ...t, is_done: !t.is_done })));
   };
 
   const handleTodoUpdated = (id, updatedTask, updatedDueDate) => {
-    setTodos(
-      todos.map((todo) =>
-        todo.id === id ? { ...todo, task: updatedTask, due_date: updatedDueDate } : todo
-      )
+    setTodosTodayState((prev) =>
+      patchById(prev, id, (t) => ({ ...t, task: updatedTask, due_date: updatedDueDate }))
+    );
+    setTodosStorageState((prev) =>
+      patchById(prev, id, (t) => ({ ...t, task: updatedTask, due_date: updatedDueDate }))
     );
   };
 
-  const toggleTheme = () => {
-    setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light'));
-  };
+  const toggleTheme = () => setMode((m) => (m === 'light' ? 'dark' : 'light'));
 
   return (
     <ThemeProvider theme={theme}>
@@ -114,16 +134,20 @@ function App() {
             {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
           </IconButton>
           {isLoggedIn ? (
-            <Button color="inherit" onClick={handleLogout}>Logout</Button>
+            <Button color="inherit" onClick={handleLogout}>
+              Logout
+            </Button>
           ) : (
-            <Button color="inherit" onClick={handleLogin}>Login</Button>
+            <Button color="inherit" onClick={handleLogin}>
+              Login
+            </Button>
           )}
         </Toolbar>
       </AppBar>
-      <Container maxWidth="lg" sx={{ mt: 4, height: 'calc(100vh - 64px - 32px)' }}> {/* Set height for Container */}
+
+      <Container maxWidth="lg" sx={{ mt: 4, height: 'calc(100vh - 64px - 32px)' }}>
         {isLoggedIn ? (
-          <Grid container spacing={3} sx={{ height: '100%' }}> {/* Ensure Grid takes full height */}
-            {/* Left Column: Pomodoro and Memo */}
+          <Grid container spacing={3} sx={{ height: '100%' }}>
             <Grid item xs={12} sm={6} md={4} container direction="column" spacing={3}>
               <Grid item>
                 <Pomodoro />
@@ -132,7 +156,7 @@ function App() {
                 <Memo />
               </Grid>
             </Grid>
-            {/* Right Column: TodoSection */}
+
             <Grid item xs={12} sm={6} md={8}>
               <TodoSection
                 todos={todos}
@@ -141,7 +165,8 @@ function App() {
                 onTodoUpdated={handleTodoUpdated}
                 onTodoCreated={handleTodoCreated}
                 appBarRef={appBarRef}
-                todoInputRef={todoInputRef} // Pass the ref down
+                todoInputRef={todoInputRef}
+                onTabChange={handleTabChange}
               />
             </Grid>
           </Grid>
@@ -156,4 +181,3 @@ function App() {
 }
 
 export default App;
-        

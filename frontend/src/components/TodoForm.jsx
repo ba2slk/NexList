@@ -1,5 +1,8 @@
 import React, { useState, forwardRef, useImperativeHandle, useRef } from 'react';
-import { TextField, Box, IconButton, Typography } from '@mui/material';
+import {
+  TextField, Box, IconButton, Typography,
+  Checkbox, FormControlLabel, Stack
+} from '@mui/material';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -12,6 +15,7 @@ const TodoForm = forwardRef(({ onTodoCreated }, ref) => {
   const [task, setTask] = useState('');
   const [dueDate, setDueDate] = useState(null);
   const [openDatePicker, setOpenDatePicker] = useState(false);
+  const [isToday, setIsToday] = useState(false);
 
   const [showWarn, setShowWarn] = useState(false);
   const warnTimerRef = useRef(null);
@@ -41,14 +45,17 @@ const TodoForm = forwardRef(({ onTodoCreated }, ref) => {
     const newTodo = await createTodo({
       task,
       due_date: dueDate && dueDate.isValid() ? dueDate.format('YYYY-MM-DD') : null,
+      today: isToday,
     });
     onTodoCreated(newTodo);
     setTask('');
     setDueDate(null);
+    setIsToday(false);
   };
 
   return (
     <Box sx={{ position: 'relative' }}>
+      {/* 경고 메시지 */}
       <Box
         role="status"
         aria-live="polite"
@@ -56,8 +63,8 @@ const TodoForm = forwardRef(({ onTodoCreated }, ref) => {
           position: 'absolute',
           left: 16,
           right: 16,
-          top: -35,
-          p: '6px 10px 0px 5px',
+          top: -37,
+          p: '5px 10px 5px 10px',
           borderRadius: 8,
           textAlign: 'center',
           fontSize: 13,
@@ -74,14 +81,14 @@ const TodoForm = forwardRef(({ onTodoCreated }, ref) => {
         아무것도 안 하실 건가요?
       </Box>
 
+      {/* 폼 */}
       <Box
         component="form"
         onSubmit={handleSubmit}
         sx={{
           display: 'flex',
-          gap: 1,
-          flexDirection: 'row',
-          alignItems: 'center',
+          flexDirection: 'column',
+          gap: 1.5,
           width: '100%',
           p: 2,
           borderRadius: 2,
@@ -95,7 +102,6 @@ const TodoForm = forwardRef(({ onTodoCreated }, ref) => {
             ? '1px solid rgba(255,255,255,0.45)'
             : '1px solid rgba(255,255,255,0.10)',
           boxShadow: '0 4px 18px rgba(0,0,0,0.12)',
-
           '&::before': {
             content: '""',
             position: 'absolute',
@@ -108,9 +114,9 @@ const TodoForm = forwardRef(({ onTodoCreated }, ref) => {
             mixBlendMode: 'screen',
           },
           '& > *': { position: 'relative', zIndex: 1 },
-          overflowX: 'hidden',
         }}
       >
+        {/* 1층: 입력창 */}
         <TextField
           inputRef={inputRef}
           fullWidth
@@ -141,7 +147,38 @@ const TodoForm = forwardRef(({ onTodoCreated }, ref) => {
           }}
         />
 
+        {/* 2층: 날짜 + 체크박스 */}
         <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <Stack direction="row" alignItems="center" spacing={2}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <IconButton
+                ref={datePickerAnchorRef}
+                onClick={() => setOpenDatePicker(true)}
+                aria-label="Select due date"
+                sx={{ p: '8px' }}
+              >
+                <CalendarTodayIcon />
+              </IconButton>
+              <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
+                {dueDate && dayjs(dueDate).isValid()
+                  ? dayjs(dueDate).format('YYYY-MM-DD')
+                  : '마감 기한 없음'}
+              </Typography>
+            </Box>
+
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={isToday}
+                  onChange={(e) => setIsToday(e.target.checked)}
+                  size="small"
+                />
+              }
+              label="오늘 할 일에 추가하기"
+              sx={{ m: 0 }}
+            />
+          </Stack>
+
           <DatePicker
             open={openDatePicker}
             onOpen={() => setOpenDatePicker(true)}
@@ -155,32 +192,16 @@ const TodoForm = forwardRef(({ onTodoCreated }, ref) => {
               },
               popper: {
                 anchorEl: () => datePickerAnchorRef.current,
-                placement: 'top-end',
+                placement: 'top-start',
                 modifiers: [
                   { name: 'offset', options: { offset: [0, 10] } },
-                  { name: 'flip', options: { fallbackPlacements: ['bottom-end'] } },
+                  { name: 'flip', options: { fallbackPlacements: ['bottom-start'] } },
                   { name: 'preventOverflow', options: { boundary: 'viewport', padding: 8 } },
                 ],
                 disablePortal: false,
               },
             }}
           />
-
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <IconButton
-              ref={datePickerAnchorRef}
-              onClick={() => setOpenDatePicker(true)}
-              aria-label="Select due date"
-              sx={{ p: '8px' }}
-            >
-              <CalendarTodayIcon />
-            </IconButton>
-            <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
-              {dueDate && dayjs(dueDate).isValid()
-                ? dayjs(dueDate).format('YYYY-MM-DD')
-                : '마감 기한 없음'}
-            </Typography>
-          </Box>
         </LocalizationProvider>
       </Box>
     </Box>
