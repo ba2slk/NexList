@@ -111,12 +111,12 @@ function App() {
     setTodosStorageState((prev) => patchById(prev, id, (t) => ({ ...t, is_done: !t.is_done })));
   };
 
-  const handleTodoUpdated = (id, updatedTask, updatedDueDate) => {
+  const handleTodoUpdated = (id, updatedTask, updatedDueDate, updatedToday) => {
     setTodosTodayState((prev) =>
-      patchById(prev, id, (t) => ({ ...t, task: updatedTask, due_date: updatedDueDate }))
+      patchById(prev, id, (t) => ({ ...t, task: updatedTask, due_date: updatedDueDate, today: updatedToday}))
     );
     setTodosStorageState((prev) =>
-      patchById(prev, id, (t) => ({ ...t, task: updatedTask, due_date: updatedDueDate }))
+      patchById(prev, id, (t) => ({ ...t, task: updatedTask, due_date: updatedDueDate, today: updatedToday}))
     );
   };
 
