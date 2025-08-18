@@ -130,19 +130,25 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
 
   const saveTask = async (id, value) => {
     const todoToUpdate = todos.find((t) => t.id === id);
-    const updatedData = { task: value, due_date: todoToUpdate.due_date };
+    const updatedData = {
+      task: value,
+      due_date: todoToUpdate.due_date,
+      today: todoToUpdate.today
+    };
     await updateTodo(id, updatedData);
     onTodoUpdated(id, updatedData.task, updatedData.due_date);
   };
 
   const saveDue = async (id, valueDayjs) => {
     const todoToUpdate = todos.find((t) => t.id === id);
+    const updatedDueDate = valueDayjs ? dayjs(valueDayjs).format('YYYY-MM-DD') : null;
     const updatedData = {
       task: todoToUpdate.task,
-      due_date: valueDayjs ? dayjs(valueDayjs).format('YYYY-MM-DD') : null,
+      due_date: updatedDueDate,
+      today: todoToUpdate.today
     };
     await updateTodo(id, updatedData);
-    onTodoUpdated(id, updatedData.task, updatedData.due_date);
+    onTodoUpdated(id, updatedData.task, updatedData.due_date, updatedData.today);
   };
 
   const handleKeyDown = (event, id) => {
