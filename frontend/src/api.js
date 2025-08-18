@@ -10,6 +10,16 @@ export const getTodos = async () => {
   return await response.json();
 };
 
+export const getTodosToday = async (today) => {
+  const response = await fetch(`${API_URL}/?today=${today}`, { credentials: 'include' });
+  console.log(response);
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
+  }
+  return await response.json();
+};
+
 export const createTodo = async (todo) => {
   const response = await fetch(`${API_URL}/`, {
     method: 'POST',
