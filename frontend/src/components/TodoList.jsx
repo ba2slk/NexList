@@ -454,11 +454,10 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
       >
         {selectedTodoForMenu && (
           <MenuItem onClick={() => {
-            // This line will be replaced later, or you can manually add onTodoMoved here
-            console.log('Move todo:', selectedTodoForMenu.id, 'to:', !selectedTodoForMenu.today);
+            onTodoMoved?.(selectedTodoForMenu.id, !selectedTodoForMenu.today);
             handleCloseContextMenu();
           }}>
-            {selectedTodoForMenu.today ? 'Move to Storage' : 'Move to Today'}
+            {selectedTodoForMenu.today ? '창고로 옮기기' : '오늘 할 일에 추가하기'}
           </MenuItem>
         )}
       </Menu>
