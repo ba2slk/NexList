@@ -15,7 +15,7 @@ import Brightness7Icon from '@mui/icons-material/Brightness7';
 import Pomodoro from './components/Pomodoro';
 import Memo from './components/Memo';
 import TodoSection from './components/TodoSection';
-import { login, logout, getLoginStatus, getTodosToday } from './api';
+import { login, logout, getLoginStatus, getTodosToday, moveTodo } from './api';
 import { getAppTheme } from './theme';
 
 function App() {
@@ -120,6 +120,33 @@ function App() {
     );
   };
 
+  const handleTodoMoved = async (id, targetTodayStatus) => {
+    if (!isLoggedIn) return;
+
+    try {
+      const movedTodo = await moveTodo(id, targetTodayStatus);
+
+      setTodosTodayState((prev) => {
+        const updatedList = prev.filter((todo) => todo.id !== id);
+        if (targetTodayStatus === true) {
+          return [...updatedList, { ...movedTodo, isNew: true }];
+        }
+        return updatedList;
+      });
+
+      setTodosStorageState((prev) => {
+        const updatedList = prev.filter((todo) => todo.id !== id);
+        if (targetTodayStatus === false) {
+          return [...updatedList, { ...movedTodo, isNew: true }];
+        }
+        return updatedList;
+      });
+    } catch (error) {
+      console.error("Failed to move todo:", error);
+      // Optionally, add user feedback here (e.g., a toast notification)
+    }
+  };
+
   const toggleTheme = () => setMode((m) => (m === 'light' ? 'dark' : 'light'));
 
   return (
@@ -167,6 +194,7 @@ function App() {
                 appBarRef={appBarRef}
                 todoInputRef={todoInputRef}
                 onTabChange={handleTabChange}
+                onTodoMoved={handleTodoMoved}
               />
             </Grid>
           </Grid>

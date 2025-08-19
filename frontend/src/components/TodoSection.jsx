@@ -12,6 +12,7 @@ function TodoSection({
   appBarRef,
   todoInputRef,
   onTabChange,
+  onTodoMoved,
 }) {
   const listWrapperRef = useRef(null);
   const formOuterRef  = useRef(null);
@@ -136,6 +137,7 @@ function TodoSection({
           onTodoCreated={onTodoCreated}
           maxHeight={listMaxHeight}
           onTabChange={onTabChange}
+          onTodoMoved={onTodoMoved}
         />
 
         {/* 추가 안전 간격 (그림자/광원 여유) */}

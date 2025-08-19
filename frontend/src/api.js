@@ -72,6 +72,20 @@ export const toggleTodo = async (id, isDone) => {
   }
 };
 
+export const moveTodo = async (id, targetTodayStatus) => {
+  const response = await fetch(`${API_URL}/${id}/move`, {
+    method: 'PUT',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ today: targetTodayStatus }),
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
+  }
+  return await response.json();
+};
+
 export const deleteAllTodos = async () => {
   const response = await fetch(`${API_URL}/`, {
     method: 'DELETE',
