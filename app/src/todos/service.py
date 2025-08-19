@@ -50,3 +50,10 @@ class TodoService:
         if updated_todo is None:
             raise HTTPException(status_code=404, detail=TODO_NOT_FOUND_DETAIL)
         return updated_todo
+    
+    
+    def update_todo_today_state_by_id(self, id: int, update: TodoTodayState, user: User) -> Todo:
+        updated_todo = self.repository.update_today_state_by_id(id, update, user.id)
+        if updated_todo is None:
+            raise HTTPException(status_code=404, detail=TODO_NOT_FOUND_DETAIL)
+        return updated_todo

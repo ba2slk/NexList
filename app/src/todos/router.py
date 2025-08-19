@@ -2,7 +2,7 @@ from auth.dependencies import get_current_user
 from auth.models import User
 from fastapi import APIRouter, Depends, status, Query
 from todos.dependencies import get_todo_service
-from todos.schemas import TodoCompletedState, TodoItem, TodoResponse
+from todos.schemas import TodoCompletedState, TodoItem, TodoResponse, TodoTodayState
 from todos.service import TodoService
 from typing import Optional
 
@@ -107,3 +107,18 @@ def update_todo_completed_state(
     user: User = Depends(get_current_user)
 ):
     return service.update_todo_completed_state_by_id(id, update, user)
+
+
+# today: <boolean> 전환하기
+@router.put(
+    "/{id}/move",
+    response_model=TodoResponse,
+    status_code=status.HTTP_200_OK
+)
+def update_todo_today_state(
+    id: int,
+    update: TodoTodayState,
+    service: TodoService = Depends(get_todo_service),
+    user: User = Depends(get_current_user)
+):
+    return service.update_todo_today_state_by_id(id, update, user)

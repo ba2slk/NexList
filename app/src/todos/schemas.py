@@ -18,6 +18,11 @@ class TodoCompletedState(BaseModel):
     is_done: bool
 
 
+# Request: update 'today' state.
+class TodoTodayState(BaseModel):
+    today: bool
+
+
 # Response
 class TodoResponse(BaseModel):
     id: int

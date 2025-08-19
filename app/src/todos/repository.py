@@ -5,7 +5,7 @@ from abc import abstractmethod
 
 from sqlalchemy.orm import Session
 from todos.models import Todo
-from todos.schemas import TodoCompletedState, TodoItem
+from todos.schemas import TodoCompletedState, TodoItem, TodoTodayState
 
 
 # Todo Interface
@@ -115,3 +115,13 @@ class TodoRepository(TodoRepositoryInterface):
         self.db.refresh(todo)
         return todo
     
+    def update_today_state_by_id(
+        self, todo_id: int, state: TodoTodayState, user_id: int
+    ) -> Todo:
+        todo = self.get_todo_by_id(todo_id, user_id)
+        if not todo:
+            return None
+        todo.today = state.today
+        self.db.commit()
+        self.db.refresh(todo)
+        return todo

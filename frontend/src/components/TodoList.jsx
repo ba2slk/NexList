@@ -1,8 +1,7 @@
-// TodoList.jsx
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import {
   List, ListItem, ListItemText, IconButton, Checkbox, TextField,
-  Box, Typography, Tabs, Tab
+  Box, Typography, Tabs, Tab, Menu, MenuItem
 } from '@mui/material';
 import { Delete } from '@mui/icons-material';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
@@ -14,7 +13,7 @@ import dayjs from 'dayjs';
 import { motion } from 'framer-motion';
 import { useTheme, alpha } from '@mui/material/styles';
 
-function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeight, onTabChange }) {
+function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeight, onTabChange, onTodoMoved }) {
   // 0=오늘(true), 1=창고(false)
   const [tabValue, setTabValue] = useState(0);
 
@@ -22,6 +21,9 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
   const [editedTask, setEditedTask] = useState('');
   const [editedDueDate, setEditedDueDate] = useState(null);
   const [openDatePickerId, setOpenDatePickerId] = useState(null);
+
+  const [contextMenu, setContextMenu] = useState(null);
+  const [selectedTodoForMenu, setSelectedTodoForMenu] = useState(null);
 
   const datePickerAnchorRefs = useRef({});
   const theme = useTheme();
@@ -38,6 +40,23 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
 
   const prevIdsRef = useRef(new Set());
   const tabSwitchRef = useRef(false);
+
+  // [수정 시작] 🚀
+  // 메뉴가 항상 클릭한 위치에 나타나도록 로직을 수정했습니다.
+  const handleContextMenu = (event, todo) => {
+    event.preventDefault();
+    setSelectedTodoForMenu(todo);
+    setContextMenu({
+      mouseX: event.clientX - 2,
+      mouseY: event.clientY - 4,
+    });
+  };
+  // [수정 끝] 🚀
+
+  const handleCloseContextMenu = () => {
+    setContextMenu(null);
+    setSelectedTodoForMenu(null);
+  };
 
   // 최초 마운트 시 현재 탭(today=true)을 부모에 알려 GET 실행 유도
   useEffect(() => {
@@ -136,7 +155,7 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
       today: todoToUpdate.today
     };
     await updateTodo(id, updatedData);
-    onTodoUpdated(id, updatedData.task, updatedData.due_date);
+    onTodoUpdated(id, updatedData.task, updatedData.due_date, updatedData.today);
   };
 
   const saveDue = async (id, valueDayjs) => {
@@ -286,6 +305,7 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
                       boxShadow: isLight ? '0 4px 18px rgba(0,0,0,0.04)' : '0 4px 18px rgba(0,0,0,0.12)',
                       alignItems: 'flex-start',
                     }}
+                    onContextMenu={(event) => handleContextMenu(event, todo)}
                     secondaryAction={
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <IconButton
@@ -422,6 +442,25 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
           }}
         />
       </Box>
+      <Menu
+        open={contextMenu !== null}
+        onClose={handleCloseContextMenu}
+        anchorReference="point"
+        anchorPosition={
+          contextMenu !== null
+            ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
+            : undefined
+        }
+      >
+        {selectedTodoForMenu && (
+          <MenuItem onClick={() => {
+            onTodoMoved?.(selectedTodoForMenu.id, !selectedTodoForMenu.today);
+            handleCloseContextMenu();
+          }}>
+            {selectedTodoForMenu.today ? '창고로 옮기기' : '오늘 할 일에 추가하기'}
+          </MenuItem>
+        )}
+      </Menu>
     </Box>
   );
 }
