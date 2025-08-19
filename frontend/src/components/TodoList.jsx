@@ -25,6 +25,8 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
   const [contextMenu, setContextMenu] = useState(null);
   const [selectedTodoForMenu, setSelectedTodoForMenu] = useState(null);
 
+  const listItemRef = useRef(null);
+
   const datePickerAnchorRefs = useRef({});
   const theme = useTheme();
   const isLight = theme.palette.mode === 'light';
@@ -41,32 +43,39 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
   const prevIdsRef = useRef(new Set());
   const tabSwitchRef = useRef(false);
 
-  // [수정 시작] 🚀
-  // 메뉴가 항상 클릭한 위치에 나타나도록 로직을 수정했습니다.
   const handleContextMenu = (event, todo) => {
     event.preventDefault();
     setSelectedTodoForMenu(todo);
     setContextMenu({
-      mouseX: event.clientX - 2,
-      mouseY: event.clientY - 4,
+      top: event.clientY,
+      left: event.clientX,
     });
   };
-  // [수정 끝] 🚀
 
   const handleCloseContextMenu = () => {
     setContextMenu(null);
     setSelectedTodoForMenu(null);
   };
 
-  // 최초 마운트 시 현재 탭(today=true)을 부모에 알려 GET 실행 유도
+  // [새로 추가된 부분] 컨텍스트 메뉴가 열려있을 때 브라우저 기본 우클릭 메뉴 방지
   useEffect(() => {
-    onTabChange?.(true); // 초기 탭은 "오늘 할 일"
-    // prevIdsRef 초기화(불필요한 자동 스크롤 방지)
+    if (contextMenu) {
+      const preventDefault = (e) => e.preventDefault();
+      document.body.addEventListener('contextmenu', preventDefault);
+
+      return () => {
+        document.body.removeEventListener('contextmenu', preventDefault);
+      };
+    }
+  }, [contextMenu]);
+
+
+  useEffect(() => {
+    onTabChange?.(true);
     prevIdsRef.current = new Set(todos.map(t => t?.id));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // 최초 1회만
+  }, []);
 
-  // 새로 추가된 항목이 맨 끝에 붙었을 때만 자동 스크롤
   useEffect(() => {
     const el = listRef.current;
     if (!el) return;
@@ -135,7 +144,6 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
     };
   }, [maxHeight]);
 
-  // CRUD
   const handleDelete = async (id) => {
     await deleteTodo(id);
     onTodoDeleted(id);
@@ -204,13 +212,12 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
         overflowX: 'hidden',
       }}
     >
-      {/* 탭 */}
       <Tabs
         value={tabValue}
         onChange={(e, newValue) => {
           setTabValue(newValue);
           tabSwitchRef.current = true;
-          onTabChange?.(newValue === 0); // true=오늘, false=창고
+          onTabChange?.(newValue === 0);
         }}
         sx={{ mb: 1 }}
         textColor="primary"
@@ -221,7 +228,6 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
         <Tab label="창고" />
       </Tabs>
 
-      {/* 리스트 */}
       {!isEmpty && (
         <List
           ref={listRef}
@@ -255,7 +261,6 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
                 }}
                 style={{ position: 'relative', width: '100%' }}
               >
-                {/* 생성시 배경 퍼짐 오버레이 */}
                 {shouldAnimate && (
                   <motion.div
                     animate={{
@@ -281,7 +286,6 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
                   />
                 )}
 
-                {/* 실제 콘텐츠 페이드인 */}
                 <motion.div
                   variants={itemVariants}
                   initial={shouldAnimate ? 'hidden' : false}
@@ -412,7 +416,6 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
         </List>
       )}
 
-      {/* 커스텀 오버레이 스크롤바 (탭 아래부터) */}
       <Box
         aria-hidden
         sx={{
@@ -445,10 +448,10 @@ function TodoList({ todos, onTodoDeleted, onTodoToggled, onTodoUpdated, maxHeigh
       <Menu
         open={contextMenu !== null}
         onClose={handleCloseContextMenu}
-        anchorReference="point"
+        anchorReference="anchorPosition"
         anchorPosition={
           contextMenu !== null
-            ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
+            ? { top: contextMenu.top, left: contextMenu.left }
             : undefined
         }
       >
