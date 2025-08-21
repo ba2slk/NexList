@@ -1,5 +1,6 @@
 const API_URL = 'http://localhost:8000/todos';
 const AUTH_URL = 'http://localhost:8000/auth';
+const MEMO_URL = 'http://localhost:8000/memo';
 
 export const getTodos = async () => {
   const response = await fetch(`${API_URL}/`, { credentials: 'include' });
@@ -112,4 +113,42 @@ export const logout = async () => {
 export const getLoginStatus = async () => {
   const response = await fetch(`${AUTH_URL}/me`, { credentials: 'include' });
   return response.ok;
+};
+
+export const getMemo = async () => {
+  const response = await fetch(`${MEMO_URL}/`, { credentials: 'include' });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
+  }
+  return await response.json();
+};
+
+export const createMemo = async (memo) => {
+  const response = await fetch(`${MEMO_URL}/`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(memo),
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
+  }
+  return await response.json();
+};
+
+export const updateMemo = async (memo) => {
+  const response = await fetch(`${MEMO_URL}/`,
+    {
+      method: 'PUT',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(memo),
+    });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
+  }
+  return await response.json();
 };
