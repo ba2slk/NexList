@@ -1,8 +1,9 @@
 import requests
 from fastapi import HTTPException, Response
 
-from nexlist.auth.schemas import GoogleUserInfoResponse
 from nexlist.config import settings
+from .schemas import GoogleUserInfoResponse
+
 
 
 def fetch_google_access_token(code: str) -> str:

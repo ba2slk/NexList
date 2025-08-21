@@ -1,9 +1,10 @@
 from fastapi import HTTPException
 
 from nexlist.auth.models import User
-from nexlist.todos.models import Todo
-from nexlist.todos.repository import TodoRepositoryInterface
-from nexlist.todos.schemas import *
+
+from .models import Todo
+from .repository import TodoRepositoryInterface
+from .schemas import *
 
 
 class TodoService:
