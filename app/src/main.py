@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from todos.router import router as todos_router
 from auth.router import router as auth_router
-from auth.models import User
+from memo.router import router as memo_router
 
 
 # Create MySQL Tables
@@ -19,6 +19,7 @@ app.mount("/assets", StaticFiles(directory="static/dist/assets"), name="assets")
 # include routers
 app.include_router(todos_router)
 app.include_router(auth_router)
+app.include_router(memo_router)
 
 # CORS 허용
 app.add_middleware(
