@@ -6,7 +6,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "8080:80"
+      - "7777:80"
 
   backend:
     build:
@@ -16,7 +16,7 @@ services:
     volumes:
       - ./server:/app
     env_file:
-      - ./server/.env.prod
+      - ./server/.env.dev
     depends_on:
       db:
         condition: service_healthy
