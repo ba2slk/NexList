@@ -1,9 +1,10 @@
 from fastapi import HTTPException
 
 from nexlist.auth.models import User
-from nexlist.memo.models import Memo
-from nexlist.memo.repository import MemoRepositoryInterface
-from nexlist.memo.schemas import MemoContent, MemoUpdatedResponse
+
+from .models import Memo
+from .repository import MemoRepositoryInterface
+from .schemas import MemoContent, MemoUpdatedResponse
 
 
 class MemoService:

@@ -2,12 +2,14 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
-from nexlist.auth.dependencies import get_current_user
-from nexlist.auth.google_auth import *
-from nexlist.auth.jwt_utils import *
-from nexlist.auth.repository import *
 from nexlist.config import settings
 from nexlist.db.dependencies import get_db
+
+from .dependencies import get_current_user
+from .google_auth import *
+from .jwt_utils import *
+from .repository import *
+
 
 router = APIRouter(prefix="/auth")
 

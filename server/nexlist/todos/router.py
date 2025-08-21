@@ -3,14 +3,14 @@ from fastapi import APIRouter, Depends, Query, status
 
 from nexlist.auth.dependencies import get_current_user
 from nexlist.auth.models import User
-from nexlist.todos.dependencies import get_todo_service
-from nexlist.todos.schemas import (
+from .dependencies import get_todo_service
+from .schemas import (
     TodoCompletedState,
     TodoItem,
     TodoResponse,
     TodoTodayState,
 )
-from nexlist.todos.service import TodoService
+from .service import TodoService
 
 router = APIRouter(prefix="/todos", tags=["Todos"])
 

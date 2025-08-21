@@ -2,8 +2,9 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from nexlist.db.dependencies import get_db
-from nexlist.todos.repository import TodoRepository
-from nexlist.todos.service import TodoService
+
+from .repository import TodoRepository
+from .service import TodoService
 
 
 # 서비스 의존성

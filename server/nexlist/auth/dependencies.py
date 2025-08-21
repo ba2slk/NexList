@@ -2,9 +2,11 @@ from fastapi import Depends, HTTPException, Request
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
-from nexlist.auth.models import User
 from nexlist.config import settings
 from nexlist.db.dependencies import get_db
+
+from .models import User
+
 
 
 # 현재 로그인 상태인 유저를 반환

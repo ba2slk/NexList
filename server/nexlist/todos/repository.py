@@ -5,8 +5,8 @@ from abc import abstractmethod
 
 from sqlalchemy.orm import Session
 
-from nexlist.todos.models import Todo
-from nexlist.todos.schemas import TodoCompletedState, TodoItem, TodoTodayState
+from .models import Todo
+from .schemas import TodoCompletedState, TodoItem, TodoTodayState
 
 
 # Todo Interface

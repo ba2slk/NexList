@@ -3,9 +3,10 @@ from fastapi import APIRouter, Depends, status
 
 from nexlist.auth.dependencies import get_current_user
 from nexlist.auth.models import User
-from nexlist.memo.dependencies import get_memo_service
-from nexlist.memo.schemas import MemoContent, MemoResponse, MemoUpdatedResponse
-from nexlist.memo.service import MemoService
+
+from .dependencies import get_memo_service
+from .schemas import MemoContent, MemoResponse, MemoUpdatedResponse
+from .service import MemoService
 
 router = APIRouter(prefix="/memo", tags=["Memo"])
 

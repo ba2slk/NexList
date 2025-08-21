@@ -4,8 +4,8 @@ from datetime import datetime
 
 from sqlalchemy.orm import Session
 
-from nexlist.auth.models import User
-from nexlist.auth.schemas import GoogleUserInfoResponse, UserInfoResponse
+from .models import User
+from .schemas import GoogleUserInfoResponse, UserInfoResponse
 
 
 # CREATE: 신규 유저 추가

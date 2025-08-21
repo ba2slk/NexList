@@ -4,8 +4,9 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 
 from nexlist.auth.models import User
-from nexlist.memo.models import Memo
-from nexlist.memo.schemas import MemoContent, MemoUpdatedResponse
+
+from .models import Memo
+from .schemas import MemoContent, MemoUpdatedResponse
 
 
 class MemoRepositoryInterface:
