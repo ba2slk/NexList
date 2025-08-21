@@ -26,7 +26,7 @@ class Environment(StrEnum):
 
 
 env = Environment(os.getenv("NEXLIST_ENV", Environment.development))
-env_file = ".env.testing" if env == Environment.testing else ".env.dev"
+env_file = f".env.{env}"
 
 class Settings(BaseSettings):
     ENV: Environment = Environment.development
