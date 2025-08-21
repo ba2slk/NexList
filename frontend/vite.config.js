@@ -1,13 +1,11 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
+// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  root: 'frontend',
-  build: {
-    outDir: '../app/src/static/dist',
-    emptyOutDir: true,
-  },
+  // The 'root' and 'build' options have been removed to allow
+  // Vite to use the correct defaults for our Docker build.
   server: {
     proxy: {
       '/todos': {

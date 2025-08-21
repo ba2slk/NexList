@@ -1,14 +1,26 @@
-# Python 3.9 베이스 이미지 사용
-FROM python:3.9
+# Multi-Staged-Build
 
-# 작업 디렉토리 설정
+FROM python:3.12-slim AS builder
+
 WORKDIR /app
 
-# 필요한 파일 복사
-COPY . .
+RUN pip install --upgrade pip
 
-# 의존성 설치
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt .
+RUN pip wheel --no-cache-dir --wheel-dir /app/wheels -r requirements.txt
 
-# FastAPI 서버 실행
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5001"]
+
+FROM python:3.12-slim
+
+WORKDIR /app
+
+COPY --from=builder /app/wheels /app/wheels
+RUN pip install --no-cache /app/wheels/*
+
+COPY ./nexlist /app/nexlist
+COPY ./alembic /app/alembic
+COPY alembic.ini /app/
+
+EXPOSE 8000
+
+CMD ["uvicorn", "nexlist.app:app", "--host", "0.0.0.0", "--port", "8000"]

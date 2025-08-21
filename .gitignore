@@ -139,6 +139,7 @@ venv.bak/
 myenv/
 .env.dev
 .env.testing
+.env.prod
 
 # Spyder project settings
 .spyderproject
