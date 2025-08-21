@@ -22,9 +22,9 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from app.src.db.database import Base
-from app.src.todos.models import Todo
-from app.src.auth.models import User
+from server.nexlist.db.database import Base
+from server.nexlist.todos.models import Todo
+from server.nexlist.auth.models import User
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
