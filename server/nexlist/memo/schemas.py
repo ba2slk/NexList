@@ -1,6 +1,6 @@
-from pydantic import BaseModel
 from datetime import date
-from typing import Optional
+
+from pydantic import BaseModel
 
 
 # PUT request
@@ -17,8 +17,7 @@ class MemoUpdatedResponse(BaseModel):
 class MemoResponse(BaseModel):
     user_id: int
     content: str
-    saved_at: Optional[date]
+    saved_at: date | None
 
     class Config:
         from_attributes = True
-    

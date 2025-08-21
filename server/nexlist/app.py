@@ -1,20 +1,19 @@
-import os
-from db.database import create_tables
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from todos.router import router as todos_router
-from auth.router import router as auth_router
-from memo.router import router as memo_router
+from fastapi.staticfiles import StaticFiles
 
+from nexlist.auth.router import router as auth_router
+from nexlist.db.database import create_tables
+from nexlist.memo.router import router as memo_router
+from nexlist.todos.router import router as todos_router
 
 # Create MySQL Tables
 create_tables()
 
 # FastAPI Configuration
 app = FastAPI(debug=True)
-app.mount("/assets", StaticFiles(directory="static/dist/assets"), name="assets")
+app.mount("/assets", StaticFiles(directory="nexlist/static/dist/assets"), name="assets")
 
 # include routers
 app.include_router(todos_router)

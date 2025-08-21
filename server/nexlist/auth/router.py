@@ -1,14 +1,13 @@
-import requests
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
-from auth.constants import *
-from auth.repository import *
-from auth.jwt_utils import *
-from auth.dependencies import get_current_user
-from auth.google_auth import *
-from db.dependencies import get_db
 
+from nexlist.auth.dependencies import get_current_user
+from nexlist.auth.google_auth import *
+from nexlist.auth.jwt_utils import *
+from nexlist.auth.repository import *
+from nexlist.config import settings
+from nexlist.db.dependencies import get_db
 
 router = APIRouter(prefix="/auth")
 
@@ -16,6 +15,8 @@ router = APIRouter(prefix="/auth")
 @router.get("/login/google")
 async def login_google() -> RedirectResponse:
     """ Google 로그인 화면으로 리디렉션"""
+    GOOGLE_LOGIN_URL: str = f"https://accounts.google.com/o/oauth2/auth?response_type=code&client_id={settings.GOOGLE_CLIENT_ID}&redirect_uri={settings.GOOGLE_REDIRECT_URI}&scope=openid%20profile%20email&access_type=offline&prompt=select_account"
+
     return RedirectResponse(url=GOOGLE_LOGIN_URL)
 
 
@@ -26,13 +27,13 @@ async def auth_google(code: str, db: Session = Depends(get_db)) -> RedirectRespo
     """
 
     access_token = fetch_google_access_token(code)  #Google Access Token 발급
-    
+
     google_user_info = fetch_google_user_info(access_token)  #유저 정보 획득
     user_info = add_user(google_user_info, db) #유저 정보 등록
 
     jwt_token = create_jwt_token({"user_id": user_info.id})  #jwt token 생성
-    
-    response = RedirectResponse(url=FRONTEND_URL)  #jwt token 발급 및 frontend로 리디렉션
+
+    response = RedirectResponse(url=settings.FRONTEND_BASE_URL)  #jwt token 발급 및 frontend로 리디렉션
 
     # smaesite="none": POST를 포함한 'cross-site' 요청으로부터 쿠키 허용, 단 secure=True 필수
     response.set_cookie(

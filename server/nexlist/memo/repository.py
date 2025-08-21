@@ -1,10 +1,12 @@
 from abc import abstractmethod
+from datetime import datetime
 
 from sqlalchemy.orm import Session
-from memo.models import Memo
-from memo.schemas import MemoContent, MemoUpdatedResponse
-from auth.models import User
-from datetime import datetime
+
+from nexlist.auth.models import User
+from nexlist.memo.models import Memo
+from nexlist.memo.schemas import MemoContent, MemoUpdatedResponse
+
 
 class MemoRepositoryInterface:
     @abstractmethod
@@ -40,7 +42,7 @@ class MemoRepository(MemoRepositoryInterface):
     # READ: single memo
     def get_memo(self, user: User) -> Memo:
         return self.db.query(Memo).filter_by(user_id=user.id).first()
-    
+
     # UPDATE: memo content
     def update_memo(self, change: MemoContent, user: User) -> MemoUpdatedResponse:
         memo = self.get_memo(user)

@@ -1,11 +1,9 @@
 import os
 import sys
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 from logging.config import fileConfig
-
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
 
 from alembic import context
 
@@ -23,8 +21,7 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 from server.nexlist.db.database import Base
-from server.nexlist.todos.models import Todo
-from server.nexlist.auth.models import User
+
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
@@ -71,10 +68,11 @@ def run_migrations_online() -> None:
     # )
 
     # alembic.ini 에서 환경변수 사용
-    from sqlalchemy import create_engine
-    import re
-    from dotenv import load_dotenv
     import os
+    import re
+
+    from dotenv import load_dotenv
+    from sqlalchemy import create_engine
 
     load_dotenv()
 
@@ -87,7 +85,7 @@ def run_migrations_online() -> None:
     }
     url = config.get_main_option("sqlalchemy.url")  # alembic.ini에 있는 url
     url = re.sub(r"\${(.+?)}", lambda m: url_tokens[m.group(1)], url)  # url로부터 환경변수 파싱
-    
+
     connectable = create_engine(url)
 
     with connectable.connect() as connection:

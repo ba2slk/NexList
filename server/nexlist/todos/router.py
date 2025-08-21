@@ -1,10 +1,16 @@
-from auth.dependencies import get_current_user
-from auth.models import User
-from fastapi import APIRouter, Depends, status, Query
-from todos.dependencies import get_todo_service
-from todos.schemas import TodoCompletedState, TodoItem, TodoResponse, TodoTodayState
-from todos.service import TodoService
-from typing import Optional
+
+from fastapi import APIRouter, Depends, Query, status
+
+from nexlist.auth.dependencies import get_current_user
+from nexlist.auth.models import User
+from nexlist.todos.dependencies import get_todo_service
+from nexlist.todos.schemas import (
+    TodoCompletedState,
+    TodoItem,
+    TodoResponse,
+    TodoTodayState,
+)
+from nexlist.todos.service import TodoService
 
 router = APIRouter(prefix="/todos", tags=["Todos"])
 
@@ -32,7 +38,7 @@ def create_todo_item(
 def read_todo_list(
     service: TodoService = Depends(get_todo_service),
     user: User = Depends(get_current_user),
-    today: Optional[bool] = Query(
+    today: bool | None = Query(
         default=None,
         description="오늘 할 일만: true, 오늘 할 일이 아닌 것만: false, 전체: 생략"
     )

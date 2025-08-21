@@ -1,12 +1,11 @@
-from auth.dependencies import get_current_user
-from auth.models import User
-from fastapi import APIRouter, Depends, status
-from memo.dependencies import get_memo_service
-from memo.schemas import MemoContent, MemoUpdatedResponse, MemoResponse
-from memo.service import MemoService
-from memo.models import Memo
-from typing import Optional
 
+from fastapi import APIRouter, Depends, status
+
+from nexlist.auth.dependencies import get_current_user
+from nexlist.auth.models import User
+from nexlist.memo.dependencies import get_memo_service
+from nexlist.memo.schemas import MemoContent, MemoResponse, MemoUpdatedResponse
+from nexlist.memo.service import MemoService
 
 router = APIRouter(prefix="/memo", tags=["Memo"])
 

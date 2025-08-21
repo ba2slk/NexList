@@ -1,8 +1,9 @@
-from memo.repository import MemoRepositoryInterface
-from memo.schemas import MemoContent, MemoUpdatedResponse
-from memo.models import Memo
-from auth.models import User
 from fastapi import HTTPException
+
+from nexlist.auth.models import User
+from nexlist.memo.models import Memo
+from nexlist.memo.repository import MemoRepositoryInterface
+from nexlist.memo.schemas import MemoContent, MemoUpdatedResponse
 
 
 class MemoService:
@@ -20,8 +21,8 @@ class MemoService:
         if memo is None:
             raise HTTPException(status_code=404, detail="Memo Not Found")
         return memo
-    
-    
+
+
     def update_memo(self, content: MemoContent, user: User) -> MemoUpdatedResponse:
         memo = self.repository.update_memo(content, user)
         if memo is None:

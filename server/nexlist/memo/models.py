@@ -1,5 +1,6 @@
-from db.database import Base
-from sqlalchemy import Column, Date, Integer, String, ForeignKey
+from sqlalchemy import Column, Date, ForeignKey, Integer, String
+
+from nexlist.db.database import Base
 
 
 class Memo(Base):

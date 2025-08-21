@@ -4,8 +4,9 @@
 from abc import abstractmethod
 
 from sqlalchemy.orm import Session
-from todos.models import Todo
-from todos.schemas import TodoCompletedState, TodoItem, TodoTodayState
+
+from nexlist.todos.models import Todo
+from nexlist.todos.schemas import TodoCompletedState, TodoItem, TodoTodayState
 
 
 # Todo Interface
@@ -60,7 +61,7 @@ class TodoRepository(TodoRepositoryInterface):
         # 오늘 할 일 여부와 상관 없이 USER_ID의 모든 Todo 반환
         if today is None:
             return self.db.query(Todo).filter_by(user_id=user_id).all()
-        
+
         # 오늘 할 일 여부에 따른 USER_ID의 Todo 반환
         return self.db.query(Todo).filter_by(user_id=user_id, today=today).all()
 
@@ -114,7 +115,7 @@ class TodoRepository(TodoRepositoryInterface):
         self.db.commit()
         self.db.refresh(todo)
         return todo
-    
+
     def update_today_state_by_id(
         self, todo_id: int, state: TodoTodayState, user_id: int
     ) -> Todo:

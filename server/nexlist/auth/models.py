@@ -1,6 +1,6 @@
-from db.database import Base
+from sqlalchemy import Boolean, Column, Date, Integer, String
 
-from sqlalchemy import Column, Date, Integer, String, Boolean
+from nexlist.db.database import Base
 
 
 class User(Base):

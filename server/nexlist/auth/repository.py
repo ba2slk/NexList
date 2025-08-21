@@ -1,9 +1,11 @@
 # User 테이블 접근
 
 from datetime import datetime
+
 from sqlalchemy.orm import Session
-from auth.models import User
-from auth.schemas import GoogleUserInfoResponse, UserInfoResponse
+
+from nexlist.auth.models import User
+from nexlist.auth.schemas import GoogleUserInfoResponse, UserInfoResponse
 
 
 # CREATE: 신규 유저 추가
