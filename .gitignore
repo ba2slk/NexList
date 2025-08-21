@@ -137,9 +137,9 @@ env.bak/
 venv.bak/
 .venv/
 myenv/
-.env.dev
+.env.development
 .env.testing
-.env.prod
+.env.production
 
 # Spyder project settings
 .spyderproject
