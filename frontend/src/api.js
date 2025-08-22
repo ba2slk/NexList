@@ -1,6 +1,6 @@
-const API_URL = 'http://localhost:8000/todos';
-const AUTH_URL = 'http://localhost:8000/auth';
-const MEMO_URL = 'http://localhost:8000/memo';
+const API_URL = '/todos';
+const AUTH_URL = '/auth';
+const MEMO_URL = '/memo';
 
 export const getTodos = async () => {
   const response = await fetch(`${API_URL}/`, { credentials: 'include' });
