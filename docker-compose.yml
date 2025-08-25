@@ -8,9 +8,6 @@ services:
       - 443:443  # HTTPS(443)
     volumes:
       - type: bind
-        source: ./frontend/dist
-        target: /var/www/Frontend
-      - type: bind
         source: ./proxy/nginx.conf
         target: /etc/nginx/conf.d/default.conf
       - type: bind
